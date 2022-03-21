@@ -1,0 +1,19 @@
+{
+  "name": "nofrixion/nofrixion-for-woocommerce",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "NoFrixion\\WC\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Andreas Tasch",
+      "email": "andy.tasch@gmail.com"
+    }
+  ],
+  "require": {
+    "btcpayserver/btcpayserver-greenfield-php": "dev-master"
+  }
+}
