@@ -21,6 +21,9 @@ define( 'NOFRIXION_PLUGIN_URL', plugin_dir_url(__FILE__ ) );
 define( 'NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce' );
 
 class NoFrixionWCPlugin {
+
+	private static $instance;
+
 	public function __construct() {
 		$this->includes();
 
@@ -181,11 +184,27 @@ class NoFrixionWCPlugin {
 		";
 	}
 
+
+	/**
+	 * Gets the main plugin loader instance.
+	 *
+	 * Ensures only one instance can be loaded.
+	 *
+	 * @return \NoFrixionWCPlugin
+	 */
+	public static function instance() {
+
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
 }
 
 // Start everything up.
 function init_nofrixion() {
-	new NoFrixionWCPlugin();
+	\NoFrixionWCPlugin::instance();
 }
 
 /**

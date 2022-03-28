@@ -12,8 +12,5 @@
       "name": "Andreas Tasch",
       "email": "andy.tasch@gmail.com"
     }
-  ],
-  "require": {
-    "btcpayserver/btcpayserver-greenfield-php": "dev-master"
-  }
+  ]
 }
