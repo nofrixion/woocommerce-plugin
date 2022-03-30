@@ -259,6 +259,11 @@ class NoFrixionWCPlugin {
 		echo "
 		<div class='wc-nofrixion-overlay'>
 			<div id='nf-payframe' style='border: none; width: 350px; height: 800px;'></div>
+
+			<form class='nofrixion-test' style='width: 350px; height:300px; background: #CCC'>
+				<input id='some-id' type='text' />
+				<input class='nofrixion-test-submit' type='submit' value='test' />
+			</form>
 		</div>
 		";
 	}

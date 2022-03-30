@@ -23,12 +23,13 @@ var createOrderPaymentRequest = function(e) {
 	jQuery.post(NoFrixionWP.url, data, function(response) {
 		if (response.data.paymentRequestId) {
 			try {
+				//jQuery('form[name=checkout]').off();
 				var paymentRequestID = response.data.paymentRequestId;
 				var nfPayFrame = new NoFrixionPayFrame(paymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
 				nfPayFrame.load();
 				jQuery('.wc-nofrixion-overlay').show();
 			} catch (ex) {
-				console.log('Error occurred intializing the payframe: ' + ex);
+				console.log('Error occurred initializing the payframe: ' + ex);
 			}
 		}
 	}).fail( function() {
@@ -41,4 +42,20 @@ var createOrderPaymentRequest = function(e) {
 jQuery(function($){
 	var checkout_form = $( 'form.woocommerce-checkout' );
 	checkout_form.on( 'checkout_place_order', createOrderPaymentRequest );
+
+	// Test form submission with
+	$('.nofrixion-test-submit').click(function(e) {
+		e.preventDefault();
+
+		$.post('https://nofrixion.free.beeceptor.com/test', {}, function(response) {
+			console.log('send success');
+			$('form').append('<p>got response: ' + response.status + ' ... redirecting in 2 sec.</p>');
+			setTimeout(function () {
+				window.location = 'https://nofrixion.com';
+			}, 2000);
+		}).fail( function() {
+			alert('error sending ajax request.');
+		});
+	});
+
 });
