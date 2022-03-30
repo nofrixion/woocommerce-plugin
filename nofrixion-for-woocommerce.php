@@ -33,7 +33,7 @@ class NoFrixionWCPlugin {
 		add_action('woocommerce_thankyou_nofrixion', [$this, 'orderStatusThankYouPage'], 10, 1);
 		add_action('wp_footer', [$this, 'addNoFrixionContainer'], 10, 1);
 		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
-		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxApiUrl'] );
+		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
 		add_filter( 'woocommerce_available_payment_gateways', [$this, 'showOnlyNofrixionGateway']);
 		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
 
