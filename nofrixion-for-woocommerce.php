@@ -13,6 +13,9 @@
  * Requires at least: 5.2
  */
 
+use NoFrixion\WC\Client\PaymentRequest;
+use NoFrixion\WC\Helper\Logger;
+
 defined( 'ABSPATH' ) || exit();
 
 define( 'NOFRIXION_VERSION', '0.1.0' );
@@ -28,6 +31,11 @@ class NoFrixionWCPlugin {
 		$this->includes();
 
 		add_action('woocommerce_thankyou_nofrixion', [$this, 'orderStatusThankYouPage'], 10, 1);
+		add_action('wp_footer', [$this, 'addNoFrixionContainer'], 10, 1);
+		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
+		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxApiUrl'] );
+		add_filter( 'woocommerce_available_payment_gateways', [$this, 'showOnlyNofrixionGateway']);
+		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
 
 		if (is_admin()) {
 			// Register our custom global settings page.
@@ -39,7 +47,6 @@ class NoFrixionWCPlugin {
 					return $settings;
 				}
 			);
-			add_action( 'wp_ajax_handle_ajax_api_url', [$this, 'processAjaxApiUrl'] );
 
 			$this->dependenciesNotification();
 			$this->notConfiguredNotification();
@@ -105,54 +112,112 @@ class NoFrixionWCPlugin {
 	}
 
 	/**
-	 * Handles the AJAX callback from the GlobalSettings form. Unfortunately with namespaces it seems to not work
-	 * to have this method on the GlobalSettings class. So keeping it here for the time being.
+	 * Handles the AJAX callback from the Payment Request on the checkout page.
 	 */
-	public function processAjaxApiUrl() {
+	public function processAjaxPaymentRequest() {
+
 		$nonce = $_POST['apiNonce'];
-		if ( ! wp_verify_nonce( $nonce, 'nofrixion-api-url-nonce' ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
 			wp_die('Unauthorized!', '', ['response' => 401]);
 		}
 
-		if ( current_user_can( 'manage_options' ) ) {
-			$host = filter_var($_POST['host'], FILTER_VALIDATE_URL);
+		if ( ! defined( 'WOOCOMMERCE_CHECKOUT' ) ) {
+			define( 'WOOCOMMERCE_CHECKOUT', true );
+		}
 
-			if ($host === false || (substr( $host, 0, 7 ) !== "http://" && substr( $host, 0, 8 ) !== "https://")) {
-				wp_send_json_error("Error validating NoFrixion URL.");
-			}
+		try {
+			$available_gateways = WC()->payment_gateways->get_available_payment_gateways();
+			$cart = WC()->cart;
+			$checkout = WC()->checkout();
+			$orderId = $checkout->create_order([]);
+			$order = wc_get_order($orderId);
+			$order->set_payment_method('nofrixion');
+			$order->set_payment_method_title($available_gateways[ 'nofrixion' ]->title);
+			$order->save();
 
-			try {
-				// Create the redirect url to NoFrixion instance.
-				$url = \NoFrixion\Client\ApiKey::getAuthorizeUrl(
-					$host,
-					\NoFrixion\WC\Helper\GreenfieldApiAuthorization::REQUIRED_PERMISSIONS,
-					'WooCommerce',
-					true,
-					true,
-					home_url('?btcpay-settings-callback'),
-					null
-				);
+			// Process Payment via NoFrixion to get the PaymentRequestId.
+			$result = $available_gateways[ 'nofrixion' ]->process_payment($orderId);
 
-				// Store the host to options before we leave the site.
-				update_option('nofrixion_url', $host);
+			wp_send_json_success(
+				[
+					'paymentRequestId' => $result['paymentRequestId'] ?? null,
+					'orderId' => $order ? $order->get_id() : 0,
+				]
+			);
+		} catch (\Throwable $e) {
+			\NoFrixion\WC\Helper\Logger::debug('Error processing payment request ajax callback: ' . $e->getMessage());
+		}
 
-				// Return the redirect url.
-				wp_send_json_success(['url' => $url]);
-			} catch (\Throwable $e) {
-				\NoFrixion\WC\Helper\Logger::debug('Error fetching redirect url from NoFrixion Server.');
+
+		wp_send_json_error("Error processing request.");
+	}
+
+	/**
+	 * Show only NoFrixion gateway on order payment page.
+	 */
+	public function showOnlyNofrixionGateway($available_gateways) {
+		global $woocommerce;
+
+		$endpoint = $woocommerce->query->get_current_endpoint();
+
+		if ($endpoint == 'order-pay') {
+			foreach ($available_gateways as $key => $data) {
+				if ($key !== 'nofrixion') {
+					unset($available_gateways[$key]);
+				}
 			}
 		}
 
-		wp_send_json_error("Error processing Ajax request.");
+		return $available_gateways;
 	}
 
+	/**
+	 * The payment received page is used as the callbackUrl of NoFrixion to check the PaymentRequest status and update
+	 * the order. The PaymentRequest check is done on each visit of that page but stops if the payment failed or succeeded.
+	 */
 	public function orderStatusThankYouPage($order_id)
 	{
 		if (!$order = wc_get_order($order_id)) {
 			return;
 		}
 
-		$title = _x('Payment Status', 'nofrixion-for-woocommerce');
+		$currentOrderStatus = $order->get_status();
+		$paymentRequestID = $order->get_meta('NoFrixion_id');
+
+		if (
+			!in_array($currentOrderStatus, ['processing', 'completed', 'failed']) &&
+			$paymentRequestID
+		) {
+			// Check PaymentRequestStatus.
+			try {
+				$gatewayConfig = get_option('woocommerce_nofrixion_settings');
+
+				$client = new PaymentRequest( $gatewayConfig['url'], $gatewayConfig['apikey']);
+				$paymentRequest = $client->getPaymentRequestStatus($paymentRequestID);
+
+				if (isset($paymentRequest['result'])) {
+					switch ( $paymentRequest['result'] ) {
+						case "FullyPaid":
+							$order->payment_complete();
+							$order->save();
+							break;
+						case "Voided":
+							$order->update_status( 'failed' );
+							$order->add_order_note( _x( 'Payment failed, please make a new order or get in contact with us.', 'nofrixion-for-woocommerce' ) );
+							$order->save();
+							break;
+						case "None":
+							// Do nothing, keeps order in pending state.
+						default:
+							// Do nothing.
+					}
+				}
+
+			} catch ( \Throwable $e ) {
+				Logger::debug('Problem fetching PaymentRequest status:', true);
+				Logger::debug( $e->getMessage(), true );
+			}
+		}
 
 		$orderData = $order->get_data();
 		$status = $orderData['status'];
@@ -160,13 +225,14 @@ class NoFrixionWCPlugin {
 		switch ($status)
 		{
 			case 'on-hold':
+			case 'pending':
 				$statusDesc = _x('Waiting for payment settlement', 'nofrixion-for-woocommerce');
 				break;
 			case 'processing':
-				$statusDesc = _x('Payment processing', 'nofrixion-for-woocommerce');
+				$statusDesc = _x('Payment completed, processing your order.', 'nofrixion-for-woocommerce');
 				break;
 			case 'completed':
-				$statusDesc = _x('Payment settled', 'nofrixion-for-woocommerce');
+				$statusDesc = _x('Payment completed', 'nofrixion-for-woocommerce');
 				break;
 			case 'failed':
 				$statusDesc = _x('Payment failed', 'nofrixion-for-woocommerce');
@@ -176,12 +242,30 @@ class NoFrixionWCPlugin {
 				break;
 		}
 
+		$title = _x('Payment Status', 'nofrixion-for-woocommerce');
+
 		echo "
 		<section class='woocommerce-order-payment-status'>
 		    <h2 class='woocommerce-order-payment-status-title'>{$title}</h2>
 		    <p><strong>{$statusDesc}</strong></p>
 		</section>
 		";
+	}
+
+	/**
+	 * Adds the overlay and NoFrixion payframe div on the checkout page.
+	 */
+	public function addNoFrixionContainer(){
+		echo "
+		<div class='wc-nofrixion-overlay'>
+			<div id='nf-payframe' style='border: none; width: 350px; height: 800px;'></div>
+		</div>
+		";
+	}
+
+	public function addScripts() {
+		wp_register_style( 'nofrixion-style', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css' );
+		wp_enqueue_style( 'nofrixion-style' );
 	}
 
 

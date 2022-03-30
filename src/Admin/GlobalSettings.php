@@ -19,7 +19,7 @@ class GlobalSettings extends \WC_Settings_Page {
 
 	public function __construct()
 	{
-		$this->id = 'btcpay_settings';
+		$this->id = 'nofrixion_settings';
 		$this->label = __( 'NoFrixion Settings', 'nofrixion-for-woocommerce' );
 		// Register custom field type order_states with OrderStatesField class.
 		add_action('woocommerce_admin_field_order_states', [(new OrderStates()), 'renderOrderStatesHtml']);

@@ -8,7 +8,7 @@ use NoFrixion\WC\Helper\PreciseNumber;
 
 class PaymentRequest extends AbstractClient
 {
-	// todo
+
     public function createPaymentRequest(
 		string $originUrl,
 		string $callbackUrl,
@@ -24,7 +24,7 @@ class PaymentRequest extends AbstractClient
         $body = http_build_query([
                 'Amount' => $amount->__toString(),
                 'Currency' => $currency,
-                'OriginUrl' => $callbackUrl,
+                'OriginUrl' => $originUrl,
                 'CallbackUrl' => $callbackUrl,
                 'PaymentMethodTypes' => $paymentMethodTypes,
                 'OrderID' => $orderId
@@ -39,12 +39,10 @@ class PaymentRequest extends AbstractClient
         }
     }
 
-	// todo: implement
-    public function getPaymentRequest(
-        string $storeId,
-        string $invoiceId
+    public function getPaymentRequestStatus(
+        string $paymentRequestId
     ): array {
-        $url = $this->getApiUrl() . 'stores/' . urlencode($storeId) . '/invoices/' . urlencode($invoiceId);
+        $url = $this->getApiUrl() . 'paymentrequests/' . urlencode($paymentRequestId) . '/result';
         $headers = $this->getRequestHeaders();
         $method = 'GET';
         $response = $this->getHttpClient()->request($method, $url, $headers);
@@ -55,6 +53,4 @@ class PaymentRequest extends AbstractClient
             throw $this->getExceptionByStatusCode($method, $url, $response);
         }
     }
-
-	// todo updatePaymentRequest
 }

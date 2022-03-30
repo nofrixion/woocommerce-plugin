@@ -5,12 +5,10 @@ declare( strict_types=1 );
 namespace NoFrixion\WC\Gateway;
 
 use NoFrixion\WC\Client\PaymentRequest;
-use NoFrixion\WC\Helper\GreenfieldApiHelper;
 use NoFrixion\WC\Helper\GreenfieldApiWebhook;
 use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\OrderStates;
 use NoFrixion\WC\Helper\PreciseNumber;
-use NoFrixion\WC\Http\CurlClient;
 
 class NoFrixionGateway extends \WC_Payment_Gateway {
 	protected $apiClient;
@@ -18,9 +16,9 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	public function __construct() {
 		// General gateway setup.
 		$this->id                 = 'nofrixion';
-		$this->icon              = $this->getIcon();
+		//$this->icon              = $this->getIcon();
 		$this->has_fields        = false;
-		$this->order_button_text = __( 'Proceed to NoFrixion', 'nofrixion-for-woocommerce' );
+		$this->order_button_text = __( 'Place order', 'nofrixion-for-woocommerce' );
 
 		// Load the settings.
 		$this->init_form_fields();
@@ -42,7 +40,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		// Actions.
 		add_action('woocommerce_api_nofrixion', [$this, 'processWebhook']);
-		add_action('admin_enqueue_scripts', [$this, 'addScripts']);
+		add_action('wp_enqueue_scripts', [$this, 'addScripts']);
 		add_action('woocommerce_update_options_payment_gateways_' . $this->getId(), [$this, 'process_admin_options']);
 	}
 
@@ -101,6 +99,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 			throw new \Exception( __( "Can't process order. Please contact us if the problem persists.", 'nofrixion-for-woocommerce' ) );
 		}
 		*/
+
 		// Load the order and check it.
 		$order = new \WC_Order( $orderId );
 		if ( $order->get_id() === 0 ) {
@@ -134,7 +133,9 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 
 			return [
 				'result'   => 'success',
-				'redirect' => '',
+				'redirect' => $order->get_checkout_payment_url(false),
+				'orderId' => $order->get_id(),
+				'paymentRequestId' => $paymentRequest['id'],
 			];
 		}
 	}
@@ -154,24 +155,29 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	 * Add scripts.
 	 */
 	public function addScripts($hook_suffix) {
-		if ($hook_suffix === 'woocommerce_page_wc-settings') {
-			wp_enqueue_media();
-			wp_register_script(
-				'nofrixion_abstract_gateway',
-				NOFRIXION_PLUGIN_URL . 'assets/js/gatewayIconMedia.js',
-				['jquery'],
-				NOFRIXION_VERSION
-			);
-			wp_enqueue_script('nofrixion_abstract_gateway');
-			wp_localize_script(
-				'nofrixion_abstract_gateway',
-				'nofrixionGatewayData',
-				[
-					'buttonText' => __('Use this image', 'nofrixion-for-woocommerce'),
-					'titleText' => __('Insert image', 'nofrixion-for-woocommerce'),
-				]
-			);
+		// we need JavaScript to process a token only on cart/checkout pages, right?
+		if ( ! is_cart() && ! is_checkout() && ! isset( $_GET['pay_for_order'] ) ) {
+			return;
 		}
+
+		// if our payment gateway is disabled, we do not have to enqueue JS too
+		if ( 'no' === $this->enabled ) {
+			return;
+		}
+
+		// let's suppose it is our payment processor JavaScript that allows to obtain a token
+		wp_enqueue_script( 'nofrixion_js', 'https://api-sandbox.nofrixion.com/js/payframe.js' );
+
+		// and this is our custom JS in your plugin directory that works with token.js
+		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );
+
+		// in most payment processors you have to use PUBLIC KEY to obtain a token
+		wp_localize_script( 'woocommerce_nofrixion', 'NoFrixionWP', [
+			'url' => admin_url( 'admin-ajax.php' ),
+			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
+		] );
+
+		wp_enqueue_script( 'woocommerce_nofrixion' );
 	}
 
 	/**
@@ -374,8 +380,8 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		$orderNumber = $order->get_order_number();
 		Logger::debug( 'Got order number: ' . $orderNumber . ' and order ID: ' . $order->get_id() );
 
-		$redirectUrl     = $this->get_return_url( $order );
-		Logger::debug( 'Setting redirect url to: ' . $redirectUrl );
+		$originUrl     = get_site_url();
+		Logger::debug( 'Setting origin url to: ' . $originUrl );
 
 		$currency = $order->get_currency();
 		$amount = PreciseNumber::parseString( $order->get_total() ); // unlike method signature suggests, it returns string.
@@ -385,11 +391,11 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		$client = new PaymentRequest( $this->get_option('url', null), $this->get_option('apikey', null) );
 		try {
 			$paymentRequest = $client->createPaymentRequest(
-				$redirectUrl,
-				WC()->api_request_url('nofrixion'),
+				$originUrl,
+				$this->get_return_url($order),
 				$amount,
 				$currency,
-				null,
+				['card','pisp'],
 				$orderNumber
 			);
 
@@ -422,11 +428,9 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * References WC order metadata with NoFrixion invoice data.
+	 * References WC order metadata with NoFrixion payment request data.
 	 */
 	protected function updateOrderMetadata( int $orderId, array $paymentRequest ) {
-		// Store relevant NoFrixion invoice data.
 		update_post_meta( $orderId, 'NoFrixion_id', $paymentRequest['id'] );
-		update_post_meta( $orderId, 'NoFrixion_paymentRequestID', $paymentRequest['result']['paymentRequestID'] );
 	}
 }
