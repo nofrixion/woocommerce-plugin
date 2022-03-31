@@ -31,7 +31,7 @@ class NoFrixionWCPlugin {
 		$this->includes();
 
 		add_action('woocommerce_thankyou_nofrixion', [$this, 'orderStatusThankYouPage'], 10, 1);
-		add_action('wp_footer', [$this, 'addNoFrixionContainer'], 10, 1);
+		//add_action('wp_footer', [$this, 'addNoFrixionContainer'], 10, 1);
 		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
 		add_filter( 'woocommerce_available_payment_gateways', [$this, 'showOnlyNofrixionGateway']);
@@ -258,10 +258,10 @@ class NoFrixionWCPlugin {
 	public function addNoFrixionContainer(){
 		echo "
 		<div class='wc-nofrixion-overlay'>
-			<div id='nf-payframe' style='border: none; width: 350px; height: 800px;'></div>
+			<div id='nf-payframe'></div>
 
 			<form class='nofrixion-test' style='width: 350px; height:300px; background: #CCC'>
-				<input id='some-id' type='text' />
+				<input id='some-id' name='sometest' type='text' />
 				<input class='nofrixion-test-submit' type='submit' value='test' />
 			</form>
 		</div>

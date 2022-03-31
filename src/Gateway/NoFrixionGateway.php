@@ -17,7 +17,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		// General gateway setup.
 		$this->id                 = 'nofrixion';
 		//$this->icon              = $this->getIcon();
-		$this->has_fields        = false;
+		$this->has_fields        = true;
 		$this->order_button_text = __( 'Place order', 'nofrixion-for-woocommerce' );
 
 		// Load the settings.
@@ -26,7 +26,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		// Define user facing set variables.
 		$this->title        = $this->get_option('title', 'NoFrixion (Mastercard, VISA, SEPA)');
-		$this->description  = $this->get_option('description', 'You will be redirected to NoFrixion to complete your purchase.');
+		//$this->description  = $this->get_option('description', 'You will be redirected to NoFrixion to complete your purchase.');
 
 		//$this->apiClient = new CurlClient();
 
@@ -138,6 +138,18 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 				'paymentRequestId' => $paymentRequest['id'],
 			];
 		}
+	}
+
+	public function payment_fields() {
+		parent::payment_fields();
+		echo "
+			<div id='nf-payframe'></div>
+
+			<form class='nofrixion-test' style='width: 350px; height:300px; background: #CCC'>
+				<input id='some-id' name='sometest' type='text' />
+				<input class='nofrixion-test-submit' type='submit' value='test' />
+			</form>
+		  ";
 	}
 
 	public function getId(): string {
