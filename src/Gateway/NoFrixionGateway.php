@@ -28,8 +28,6 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		$this->title        = $this->get_option('title', 'NoFrixion (Mastercard, VISA, SEPA)');
 		//$this->description  = $this->get_option('description', 'You will be redirected to NoFrixion to complete your purchase.');
 
-		//$this->apiClient = new CurlClient();
-
 		// Admin facing title and description.
 		$this->method_title       = 'NoFrixion';
 		$this->method_description = __('NoFrixion gateway supporting all available credit card and SEPA payments.', 'nofrixion-for-woocommerce');
@@ -142,14 +140,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 
 	public function payment_fields() {
 		parent::payment_fields();
-		echo "
-			<div id='nf-payframe'></div>
-
-			<form class='nofrixion-test' style='width: 350px; height:300px; background: #CCC'>
-				<input id='some-id' name='sometest' type='text' />
-				<input class='nofrixion-test-submit' type='submit' value='test' />
-			</form>
-		  ";
+		echo "<div id='nf-payframe'></div>";
 	}
 
 	public function getId(): string {
@@ -196,6 +187,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	 * Process webhooks from NoFrixion.
 	 */
 	public function processWebhook() {
+		// todo nofrixion: this is currently not needed
 		if ($rawPostData = file_get_contents("php://input")) {
 			// Validate webhook request.
 			// Note: getallheaders() CamelCases all headers for PHP-FPM/Nginx but for others maybe not, so "NoFrixion-Sig" may becomes "Btcpay-Sig".

@@ -1,80 +1,101 @@
-var successCallback = function (data) {
-	var checkout_form = $('form.woocommerce-checkout');
+/**
+ * Trigger ajax request to create order and payment request.
+ */
+var createOrderPaymentRequest = function () {
+	if (window.nfPayFrame === undefined) {
 
-	// deactivate the tokenRequest function event
-	checkout_form.off('checkout_place_order', createOrderPaymentRequest);
+		console.log('Creating payment request');
 
-	// submit the form now
-	//checkout_form.submit();
-};
+		let data = {
+			'action': 'nofrixion_payment_request',
+			'apiNonce': NoFrixionWP.apiNonce,
+			'fields': jQuery('form.checkout').serializeArray()
+		};
 
-var errorCallback = function (data) {
-	console.log(data);
-};
-
-var createOrderPaymentRequest = function (e) {
-	//e.preventDefault();
-
-	let data = {
-		'action': 'nofrixion_payment_request',
-		'apiNonce': NoFrixionWP.apiNonce
-	};
-
-	jQuery.post(NoFrixionWP.url, data, function (response) {
-		if (response.data.paymentRequestId) {
-			try {
-				var paymentRequestID = response.data.paymentRequestId;
-				var nfPayFrame = new NoFrixionPayFrame(paymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
-				nfPayFrame.load();
-				//jQuery('.wc-nofrixion-overlay').show();
-			} catch (ex) {
-				console.log('Error occurred initializing the payframe: ' + ex);
+		jQuery.post(NoFrixionWP.url, data, function (response) {
+			if (response.data.paymentRequestId) {
+				try {
+					var paymentRequestID = response.data.paymentRequestId;
+					window.nfPayFrame = new NoFrixionPayFrame(paymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
+					window.nfPayFrame.load();
+					window.nfWCOrderId = response.data.orderId;
+					console.log(response);
+				} catch (ex) {
+					console.log('Error occurred initializing the payframe: ' + ex);
+				}
 			}
-		}
-	}).fail(function () {
-		alert('Error processing your request. Please contact support or try again.')
-	});
+		}).fail(function () {
+			alert('Error processing your request. Please contact support or try again.')
+		});
+	} else {
+		noFrixionUpdateOrder();
+	}
 
 	return false;
 };
 
-var doNothing = function (e) {
-	console.log('doNothing() triggered.')
+/**
+ * Update order address data and other changes.
+ */
+var noFrixionUpdateOrder = function() {
+	// Only trigger when we have a NoFrixion order id.
+	if (window.nfWCOrderId !== undefined) {
+
+		console.log('Updating existing orderId ' + window.nfWCOrderId);
+
+		let data = {
+			'action': 'nofrixion_order_update',
+			'apiNonce': NoFrixionWP.apiNonce,
+			'fields': jQuery('form.checkout').serializeArray(),
+			'orderId': nfWCOrderId
+		};
+
+		jQuery.post(NoFrixionWP.url, data, function (response) {
+			console.log('Success updating order.');
+			return true;
+		}).fail(function () {
+			console.log('Error updating order.');
+			return false;
+		});
+	}
+};
+
+/**
+ * Trigger payframe button submit.
+ */
+var submitPayFrame = function (e) {
+	e.preventDefault();
+
+	console.log('Trigger submitting payframe.');
+	jQuery('#nf-cardPayButton').click();
+	// Seems to not work.
+	// nfpayByCard();
+
 	return false;
 };
 
 var noFrixionSelected = function () {
-	if (jQuery('form[name="checkout"] input[name="payment_method"]:checked').val() == 'nofrixion') {
+	var checkout_form = jQuery('form.woocommerce-checkout');
+	if (jQuery('form[name="checkout"] input[name="payment_method"]:checked').val() === 'nofrixion') {
 		createOrderPaymentRequest();
+		// Bind our custom event handler to checkout button.
+		checkout_form.on('checkout_place_order', submitPayFrame);
+	} else {
+		// Undo bind custom event handler.
+		checkout_form.off('checkout_place_order', submitPayFrame);
 	}
 }
 
+/**
+ * Main entry point.
+ */
 jQuery(function ($) {
-	var checkout_form = $('form.woocommerce-checkout');
-	checkout_form.on('checkout_place_order', doNothing);
-
-	$('body')
-		.on('updated_checkout', function () {
-			noFrixionSelected();
-		});
+	// Listen on Update cart and change of payment methods.
+	$('body').on('updated_checkout', function () {
+		noFrixionSelected();
+	});
 
 	$('input[name="payment_method"]').change(function () {
 		noFrixionSelected();
 	});
-
-	// Test form submission.
-	$('.nofrixion-test-submit').click(function (e) {
-		e.preventDefault();
-
-		$.post('https://nofrixion.free.beeceptor.com/test', {}, function (response) {
-			console.log('send success');
-			$('form').append('<p>got response: ' + response.status + ' ... redirecting in 2 sec.</p>');
-			setTimeout(function () {
-				window.location = 'https://nofrixion.com';
-			}, 2000);
-		}).fail(function () {
-			alert('error sending ajax request.');
-		});
-	});
-
 });

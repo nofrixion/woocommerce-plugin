@@ -31,9 +31,10 @@ class NoFrixionWCPlugin {
 		$this->includes();
 
 		add_action('woocommerce_thankyou_nofrixion', [$this, 'orderStatusThankYouPage'], 10, 1);
-		//add_action('wp_footer', [$this, 'addNoFrixionContainer'], 10, 1);
 		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
+		add_action( 'wp_ajax_nofrixion_order_update', [$this, 'processAjaxUpdateOrder'] );
+		add_action( 'wp_ajax_nopriv_nofrixion_order_update', [$this, 'processAjaxUpdateOrder'] );
 		add_filter( 'woocommerce_available_payment_gateways', [$this, 'showOnlyNofrixionGateway']);
 		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
 
@@ -125,6 +126,9 @@ class NoFrixionWCPlugin {
 			define( 'WOOCOMMERCE_CHECKOUT', true );
 		}
 
+		// todo: for submission to wp directory we probably need to iterate and sanitize here instead of the called function below.
+		$fields = $_POST['fields'];
+
 		try {
 			$available_gateways = WC()->payment_gateways->get_available_payment_gateways();
 			$cart = WC()->cart;
@@ -133,6 +137,7 @@ class NoFrixionWCPlugin {
 			$order = wc_get_order($orderId);
 			$order->set_payment_method('nofrixion');
 			$order->set_payment_method_title($available_gateways[ 'nofrixion' ]->title);
+			$this->updateOrderFields($order, $fields);
 			$order->save();
 
 			// Process Payment via NoFrixion to get the PaymentRequestId.
@@ -148,8 +153,43 @@ class NoFrixionWCPlugin {
 			\NoFrixion\WC\Helper\Logger::debug('Error processing payment request ajax callback: ' . $e->getMessage());
 		}
 
-
 		wp_send_json_error("Error processing request.");
+	}
+
+	public function processAjaxUpdateOrder() {
+		$nonce = $_POST['apiNonce'];
+		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
+			wp_die('Unauthorized!', '', ['response' => 401]);
+		}
+
+		if ( ! defined( 'WOOCOMMERCE_CHECKOUT' ) ) {
+			define( 'WOOCOMMERCE_CHECKOUT', true );
+		}
+
+		// todo: for submission to wp directory we probably need to iterate and sanitize here instead of the called function below
+		$fields = $_POST['fields'];
+
+		$orderId = wc_sanitize_order_id($_POST['orderId']);
+
+		$order = new \WC_Order($orderId);
+		$this->updateOrderFields($order, $fields);
+		$order->save();
+
+		wp_send_json_success(
+			[
+				'orderId' => $orderId
+			]
+		);
+	}
+
+	public function updateOrderFields(\WC_Order &$order, array $fields) {
+		// todo list of specific stuff to update.
+		foreach ($fields as $field) {
+			$method = 'set_' . $field['name'];
+			if (method_exists($order, $method)) {
+				$order->$method(wc_clean(wp_unslash($field['value'])));
+			}
+		}
 	}
 
 	/**
@@ -252,27 +292,10 @@ class NoFrixionWCPlugin {
 		";
 	}
 
-	/**
-	 * Adds the overlay and NoFrixion payframe div on the checkout page.
-	 */
-	public function addNoFrixionContainer(){
-		echo "
-		<div class='wc-nofrixion-overlay'>
-			<div id='nf-payframe'></div>
-
-			<form class='nofrixion-test' style='width: 350px; height:300px; background: #CCC'>
-				<input id='some-id' name='sometest' type='text' />
-				<input class='nofrixion-test-submit' type='submit' value='test' />
-			</form>
-		</div>
-		";
-	}
-
 	public function addScripts() {
 		wp_register_style( 'nofrixion-style', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css' );
 		wp_enqueue_style( 'nofrixion-style' );
 	}
-
 
 	/**
 	 * Gets the main plugin loader instance.
