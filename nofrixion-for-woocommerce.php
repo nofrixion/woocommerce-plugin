@@ -293,8 +293,10 @@ class NoFrixionWCPlugin {
 	}
 
 	public function addScripts() {
-		wp_register_style( 'nofrixion-style', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css' );
-		wp_enqueue_style( 'nofrixion-style' );
+		// Not needed for now:
+		// todo: remove incl files if of no use.
+		// wp_register_style( 'nofrixion-style', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css' );
+		// wp_enqueue_style( 'nofrixion-style' );
 	}
 
 	/**

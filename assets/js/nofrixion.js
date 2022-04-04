@@ -2,6 +2,7 @@
  * Trigger ajax request to create order and payment request.
  */
 var createOrderPaymentRequest = function () {
+	// Only create order if nfPayFrame is not initialized yet.
 	if (window.nfPayFrame === undefined) {
 
 		console.log('Creating payment request');
@@ -27,8 +28,6 @@ var createOrderPaymentRequest = function () {
 		}).fail(function () {
 			alert('Error processing your request. Please contact support or try again.')
 		});
-	} else {
-		noFrixionUpdateOrder();
 	}
 
 	return false;
@@ -38,8 +37,11 @@ var createOrderPaymentRequest = function () {
  * Update order address data and other changes.
  */
 var noFrixionUpdateOrder = function() {
-	// Only trigger when we have a NoFrixion order id.
-	if (window.nfWCOrderId !== undefined) {
+
+	let updated = false;
+
+	// Only trigger when we have a NoFrixion order id and all required fields have values.
+	if (window.nfWCOrderId !== undefined && noFrixionValidateFields()) {
 
 		console.log('Updating existing orderId ' + window.nfWCOrderId);
 
@@ -50,26 +52,36 @@ var noFrixionUpdateOrder = function() {
 			'orderId': nfWCOrderId
 		};
 
+		// We need to make sure the update worked before returning from this function, can do same a bit cleaner with .ajax()
+		jQuery.ajaxSetup({async: false});
+
 		jQuery.post(NoFrixionWP.url, data, function (response) {
 			console.log('Success updating order.');
-			return true;
+			updated = true;
 		}).fail(function () {
 			console.log('Error updating order.');
-			return false;
 		});
+
+		// Reenable async.
+		jQuery.ajaxSetup({async: true});
+
+		return updated;
 	}
+
+	return updated;
 };
 
 /**
  * Trigger payframe button submit.
  */
 var submitPayFrame = function (e) {
-	e.preventDefault();
-
-	console.log('Trigger submitting payframe.');
-	jQuery('#nf-cardPayButton').click();
-	// Seems to not work.
-	// nfpayByCard();
+	console.log('Triggered submitpayframe');
+	if (noFrixionUpdateOrder()) {
+		console.log('Trigger submitting payframe.');
+		jQuery('#nf-cardPayButton').click();
+		// Seems to not work.
+		// nfpayByCard();
+	}
 
 	return false;
 };
@@ -87,15 +99,53 @@ var noFrixionSelected = function () {
 }
 
 /**
+ * Validate form fields.
+ */
+var noFrixionValidateFields = function () {
+
+	console.log('Validating form fields.');
+
+	let hasErrors = false;
+
+	// Prepare div container structure.
+	let $checkoutForm = jQuery('form.checkout');
+
+	let alert = `<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">
+					<ul class="woocommerce-error" role="alert">`;
+
+	jQuery.each($checkoutForm.serializeArray(), function(item, field) {
+		let $fieldRow = jQuery('#' + field.name + '_field');
+		if ($fieldRow.hasClass('validate-required')) {
+
+			if (field.value === '') {
+				console.log(field.name + ' is required');
+
+				hasErrors = true;
+				alert += `<li><strong>${$fieldRow.find('label').text()}</strong> ${NoFrixionWP.isRequiredField}</li>`;
+			}
+		}
+	});
+
+	// Close ul and div.
+	alert += '</ul></div>';
+
+	// Add or remove errors from page.
+	if (hasErrors) {
+		$checkoutForm.prepend(alert);
+	} else {
+		jQuery('.woocommerce-NoticeGroup').remove();
+	}
+
+	return !hasErrors;
+};
+
+/**
  * Main entry point.
  */
 jQuery(function ($) {
 	// Listen on Update cart and change of payment methods.
-	$('body').on('updated_checkout', function () {
-		noFrixionSelected();
-	});
-
-	$('input[name="payment_method"]').change(function () {
+	$('body').on('updated_checkout payment_method_selected', function (event) {
+		console.log('Fired event: ' + event.type);
 		noFrixionSelected();
 	});
 });

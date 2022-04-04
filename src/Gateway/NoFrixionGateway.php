@@ -158,8 +158,8 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	 * Add scripts.
 	 */
 	public function addScripts($hook_suffix) {
-		// we need JavaScript to process a token only on cart/checkout pages, right?
-		if ( ! is_cart() && ! is_checkout() && ! isset( $_GET['pay_for_order'] ) ) {
+		// We only need this on checkout and pay-for-order page.
+		if ( ! is_checkout() && ! isset( $_GET['pay_for_order'] ) ) {
 			return;
 		}
 
@@ -178,6 +178,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		wp_localize_script( 'woocommerce_nofrixion', 'NoFrixionWP', [
 			'url' => admin_url( 'admin-ajax.php' ),
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
+			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
 		] );
 
 		wp_enqueue_script( 'woocommerce_nofrixion' );
