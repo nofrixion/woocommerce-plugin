@@ -139,8 +139,20 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	}
 
 	public function payment_fields() {
-		parent::payment_fields();
-		echo "<div id='nf-payframe'></div>";
+		echo '<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
+		        <div class="form-row form-row-wide"><label>Card Number <span class="required">*</span></label>
+				<input name="cardNumber" type="text" autocomplete="off">
+				</div>
+				<div class="form-row form-row-first">
+					<label>Expiry Date <span class="required">*</span></label>
+					<input name="expiry" type="text" autocomplete="off" placeholder="MM / YY">
+				</div>
+				<div class="form-row form-row-last">
+					<label>Card Code (CVC) <span class="required">*</span></label>
+					<input name="cardVerificationNumber" type="password" autocomplete="off" placeholder="CVC">
+				</div>
+				<div class="clear"></div>
+		</form>';
 	}
 
 	public function getId(): string {
@@ -179,6 +191,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 			'url' => admin_url( 'admin-ajax.php' ),
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
+			'nfApiUrl' => $this->get_option('url', null),
 		] );
 
 		wp_enqueue_script( 'woocommerce_nofrixion' );

@@ -16,9 +16,9 @@ var createOrderPaymentRequest = function () {
 		jQuery.post(NoFrixionWP.url, data, function (response) {
 			if (response.data.paymentRequestId) {
 				try {
-					var paymentRequestID = response.data.paymentRequestId;
-					window.nfPayFrame = new NoFrixionPayFrame(paymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
-					window.nfPayFrame.load();
+					window.nfWCpaymentRequestID = response.data.paymentRequestId;
+					//window.nfPayFrame = new NoFrixionPayFrame(nfWCpaymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
+					//window.nfPayFrame.load();
 					window.nfWCOrderId = response.data.orderId;
 					console.log(response);
 				} catch (ex) {
@@ -75,12 +75,26 @@ var noFrixionUpdateOrder = function() {
  * Trigger payframe button submit.
  */
 var submitPayFrame = function (e) {
+	e.preventDefault();
 	console.log('Triggered submitpayframe');
 	if (noFrixionUpdateOrder()) {
-		console.log('Trigger submitting payframe.');
-		jQuery('#nf-cardPayButton').click();
+		console.log('Trigger submitting nofrixion form.');
+		//jQuery('#nf-cardPayButton').click();
 		// Seems to not work.
 		// nfpayByCard();
+		let cardPaymentForm = document.getElementById('nf-cardPaymentForm');
+		const formData = new FormData(cardPaymentForm);
+		formData.append('expiryMonth', formData.get('expiry').split('/')[0]);
+		formData.append('expiryYear', formData.get('expiry').split('/')[1]);
+
+		fetch("https://api-sandbox.nofrixion.com/api/v1/paymentrequests/" + nfWCpaymentRequestID + "/cardsensitive", {
+			method: 'POST',
+			body: formData
+		})
+			.then(
+				//response => window.top.location.href = paymentRequest.callbackUrl.replace('{id}', paymentRequest.id)
+				response => console.log(response)
+			).catch(e => console.error(e.message));
 	}
 
 	return false;
