@@ -20,6 +20,8 @@ var createOrderPaymentRequest = function () {
 					//window.nfPayFrame = new NoFrixionPayFrame(nfWCpaymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
 					//window.nfPayFrame.load();
 					window.nfWCOrderId = response.data.orderId;
+					window.nfWCOrderRedirect = response.data.orderRedirect;
+
 					console.log(response);
 				} catch (ex) {
 					console.log('Error occurred initializing the payframe: ' + ex);
@@ -79,9 +81,7 @@ var submitPayFrame = function (e) {
 	console.log('Triggered submitpayframe');
 	if (noFrixionUpdateOrder()) {
 		console.log('Trigger submitting nofrixion form.');
-		//jQuery('#nf-cardPayButton').click();
-		// Seems to not work.
-		// nfpayByCard();
+
 		let cardPaymentForm = document.getElementById('nf-cardPaymentForm');
 		const formData = new FormData(cardPaymentForm);
 		formData.append('expiryMonth', formData.get('expiry').split('/')[0]);
@@ -90,11 +90,13 @@ var submitPayFrame = function (e) {
 		fetch("https://api-sandbox.nofrixion.com/api/v1/paymentrequests/" + nfWCpaymentRequestID + "/cardsensitive", {
 			method: 'POST',
 			body: formData
-		})
-			.then(
-				//response => window.top.location.href = paymentRequest.callbackUrl.replace('{id}', paymentRequest.id)
-				response => console.log(response)
-			).catch(e => console.error(e.message));
+		}).then(res => {
+			if (res.status >= 200 && res.status < 300) {
+				return res.json()
+			} else {
+				throw new Error();
+			}
+		}).then(data => window.top.location.href = nfWCOrderRedirect).catch(e => console.error(e.message));
 	}
 
 	return false;

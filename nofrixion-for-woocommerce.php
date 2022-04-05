@@ -147,6 +147,7 @@ class NoFrixionWCPlugin {
 				[
 					'paymentRequestId' => $result['paymentRequestId'] ?? null,
 					'orderId' => $order ? $order->get_id() : 0,
+					'orderRedirect' => $available_gateways[ 'nofrixion' ]->get_return_url($order)
 				]
 			);
 		} catch (\Throwable $e) {

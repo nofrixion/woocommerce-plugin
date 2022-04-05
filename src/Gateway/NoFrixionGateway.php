@@ -145,7 +145,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 				</div>
 				<div class="form-row form-row-first">
 					<label>Expiry Date <span class="required">*</span></label>
-					<input name="expiry" type="text" autocomplete="off" placeholder="MM / YY">
+					<input name="expiry" type="text" autocomplete="off" placeholder="MM / YYYY">
 				</div>
 				<div class="form-row form-row-last">
 					<label>Card Code (CVC) <span class="required">*</span></label>
