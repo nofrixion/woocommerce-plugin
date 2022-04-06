@@ -14,6 +14,7 @@
  */
 
 use NoFrixion\WC\Client\PaymentRequest;
+use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
 
 defined( 'ABSPATH' ) || exit();
@@ -231,9 +232,9 @@ class NoFrixionWCPlugin {
 		) {
 			// Check PaymentRequestStatus.
 			try {
-				$gatewayConfig = get_option('woocommerce_nofrixion_settings');
+				$apiHelper = new ApiHelper();
 
-				$client = new PaymentRequest( $gatewayConfig['url'], $gatewayConfig['apikey']);
+				$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
 				$paymentRequest = $client->getPaymentRequestStatus($paymentRequestID);
 
 				if (isset($paymentRequest['result'])) {

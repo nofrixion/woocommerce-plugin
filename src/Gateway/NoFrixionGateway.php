@@ -5,13 +5,14 @@ declare( strict_types=1 );
 namespace NoFrixion\WC\Gateway;
 
 use NoFrixion\WC\Client\PaymentRequest;
-use NoFrixion\WC\Helper\GreenfieldApiWebhook;
+use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\OrderStates;
 use NoFrixion\WC\Helper\PreciseNumber;
 
 class NoFrixionGateway extends \WC_Payment_Gateway {
-	protected $apiClient;
+
+	public ApiHelper $apiHelper;
 
 	public function __construct() {
 		// General gateway setup.
@@ -36,6 +37,8 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		$this->debug_php_version    = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
 		$this->debug_plugin_version = NOFRIXION_VERSION;
 
+		$this->apiHelper = new ApiHelper();
+
 		// Actions.
 		add_action('woocommerce_api_nofrixion', [$this, 'processWebhook']);
 		add_action('wp_enqueue_scripts', [$this, 'addScripts']);
@@ -54,20 +57,6 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 				'default'     => 'no',
 				'value'       => 'yes',
 				'desc_tip'    => false,
-			],
-			'url'       => [
-				'title'       => __( 'NoFrixion API URL', 'nofrixion-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => __( 'Sandbox or production API endpoint url.', 'nofrixion-for-woocommerce' ),
-				'default'     => 'https://api-sandbox.nofrixion.com',
-				'desc_tip'    => true,
-			],
-			'apikey'       => [
-				'title'       => __( 'API Key (Merchant)', 'nofrixion-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => __( 'Provide the merchant API key from your NoFrixion customer account.', 'nofrixion-for-woocommerce' ),
-				'default'     => null,
-				'desc_tip'    => true,
 			],
 			'title'       => [
 				'title'       => __( 'Customer Text', 'nofrixion-for-woocommerce' ),
@@ -90,13 +79,12 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 	 * @inheritDoc
 	 */
 	public function process_payment( $orderId ) {
-		/*
-		if ( ! $this->apiHelper->configured ) {
-			Logger::debug( 'NoFrixion Server API connection not configured, aborting. Please go to NoFrixion Server settings and set it up.' );
+
+		if ( ! $this->apiHelper->isConfigured() ) {
+			Logger::debug( 'NoFrixion Server API connection not configured, aborting. Please go to NoFrixion settings and set it up.' );
 			// todo: show error notice/make sure it fails
-			throw new \Exception( __( "Can't process order. Please contact us if the problem persists.", 'nofrixion-for-woocommerce' ) );
+			throw new \Exception( __( "Can't process order. No merchant token configured, aborting.", 'nofrixion-for-woocommerce' ) );
 		}
-		*/
 
 		// Load the order and check it.
 		$order = new \WC_Order( $orderId );
@@ -404,10 +392,9 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		$currency = $order->get_currency();
 		$amount = PreciseNumber::parseString( $order->get_total() ); // unlike method signature suggests, it returns string.
 
-
-		// Create the invoice on NoFrixion Server.
-		$client = new PaymentRequest( $this->get_option('url', null), $this->get_option('apikey', null) );
 		try {
+			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+
 			$paymentRequest = $client->createPaymentRequest(
 				$originUrl,
 				$this->get_return_url($order),
@@ -423,7 +410,6 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		} catch ( \Throwable $e ) {
 			Logger::debug( $e->getMessage(), true );
-			// todo: should we throw exception here to make sure there is an visible error on the page and not silently failing?
 		}
 
 		return null;
