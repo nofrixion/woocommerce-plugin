@@ -10,15 +10,17 @@ use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\OrderStates;
 use NoFrixion\WC\Helper\PreciseNumber;
 
-class NoFrixionGateway extends \WC_Payment_Gateway {
+abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 	public ApiHelper $apiHelper;
 
 	public function __construct() {
 		// General gateway setup.
-		$this->id                 = 'nofrixion';
+		// Do not set id here.
+
+
 		//$this->icon              = $this->getIcon();
-		$this->has_fields        = true;
+
 		$this->order_button_text = __( 'Place order', 'nofrixion-for-woocommerce' );
 
 		// Load the settings.
@@ -26,8 +28,8 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		$this->init_settings();
 
 		// Define user facing set variables.
-		$this->title        = $this->get_option('title', 'NoFrixion (Mastercard, VISA, SEPA)');
-		//$this->description  = $this->get_option('description', 'You will be redirected to NoFrixion to complete your purchase.');
+		$this->title        = $this->getTitle();
+		$this->description  = $this->getDescription();
 
 		// Admin facing title and description.
 		$this->method_title       = 'NoFrixion';
@@ -126,25 +128,17 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 	}
 
-	public function payment_fields() {
-		echo '<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
-		        <div class="form-row form-row-wide"><label>Card Number <span class="required">*</span></label>
-				<input name="cardNumber" type="text" autocomplete="off">
-				</div>
-				<div class="form-row form-row-first">
-					<label>Expiry Date <span class="required">*</span></label>
-					<input name="expiry" type="text" autocomplete="off" placeholder="MM / YYYY">
-				</div>
-				<div class="form-row form-row-last">
-					<label>Card Code (CVC) <span class="required">*</span></label>
-					<input name="cardVerificationNumber" type="password" autocomplete="off" placeholder="CVC">
-				</div>
-				<div class="clear"></div>
-		</form>';
-	}
 
 	public function getId(): string {
 		return $this->id;
+	}
+
+	public function getTitle(): string {
+		return $this->get_option('title', 'NoFrixion');
+	}
+
+	public function getDescription(): string {
+		return $this->get_option('description', '');
 	}
 
 	/**
@@ -400,7 +394,7 @@ class NoFrixionGateway extends \WC_Payment_Gateway {
 				$this->get_return_url($order),
 				$amount,
 				$currency,
-				['card','pisp'],
+				[str_replace('nofrixion_', '', $this->getId())], // pass card, pisp, .. here
 				$orderNumber
 			);
 

@@ -3,14 +3,18 @@
  */
 var createOrderPaymentRequest = function () {
 	// Only create order if nfPayFrame is not initialized yet.
-	if (window.nfPayFrame === undefined) {
+	// Todo: when implementing PISP we need to make sure to update to new PaymentRequestID in case of switching payment
+	//  methods. Or to avoid logic here we could create card,pisp payment request IDs for now.
+
+	if (window.nfWCpaymentRequestID === undefined) {
 
 		console.log('Creating payment request');
 
 		let data = {
 			'action': 'nofrixion_payment_request',
 			'apiNonce': NoFrixionWP.apiNonce,
-			'fields': jQuery('form.checkout').serializeArray()
+			'fields': jQuery('form.checkout').serializeArray(),
+			'gateway': jQuery('form[name="checkout"] input[name="payment_method"]:checked').val()
 		};
 
 		jQuery.post(NoFrixionWP.url, data, function (response) {
@@ -104,7 +108,7 @@ var submitPayFrame = function (e) {
 
 var noFrixionSelected = function () {
 	var checkout_form = jQuery('form.woocommerce-checkout');
-	if (jQuery('form[name="checkout"] input[name="payment_method"]:checked').val() === 'nofrixion') {
+	if (jQuery('form[name="checkout"] input[name="payment_method"]:checked').val() === 'nofrixion_card') {
 		createOrderPaymentRequest();
 		// Bind our custom event handler to checkout button.
 		checkout_form.on('checkout_place_order', submitPayFrame);

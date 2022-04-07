@@ -31,12 +31,12 @@ class NoFrixionWCPlugin {
 	public function __construct() {
 		$this->includes();
 
-		add_action('woocommerce_thankyou_nofrixion', [$this, 'orderStatusThankYouPage'], 10, 1);
+		add_action('woocommerce_thankyou_nofrixion_card', [$this, 'orderStatusThankYouPage'], 10, 1);
+		add_action('woocommerce_thankyou_nofrixion_pisp', [$this, 'orderStatusThankYouPage'], 10, 1);
 		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
 		add_action( 'wp_ajax_nofrixion_order_update', [$this, 'processAjaxUpdateOrder'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_order_update', [$this, 'processAjaxUpdateOrder'] );
-		add_filter( 'woocommerce_available_payment_gateways', [$this, 'showOnlyNofrixionGateway']);
 		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
 
 		if (is_admin()) {
@@ -68,9 +68,10 @@ class NoFrixionWCPlugin {
 		}
 	}
 
-	public static function initPaymentGateway($gateways): array {
+	public static function initPaymentGateways($gateways): array {
 		// Add NoFrixion gateway to WooCommerce.
-		$gateways[] = \NoFrixion\WC\Gateway\NoFrixionGateway::class;
+		$gateways[] = \NoFrixion\WC\Gateway\NoFrixionCard::class;
+		$gateways[] = \NoFrixion\WC\Gateway\NoFrixionPisp::class;
 
 		return $gateways;
 	}
@@ -79,20 +80,19 @@ class NoFrixionWCPlugin {
 	 * Displays notice (and link to config page) on admin dashboard if the plugin is not configured yet.
 	 */
 	public function notConfiguredNotification(): void {
-		/*
-		if (!\NoFrixion\WC\Helper\GreenfieldApiHelper::getConfig()) {
+		$apiHelper = new ApiHelper();
+		if (!$apiHelper->isConfigured()) {
 			$message = sprintf(
 				esc_html__(
 					'Plugin not configured yet, please %1$sconfigure the plugin here%2$s',
 					'nofrixion-for-woocommerce'
 				),
-				'<a href="' . esc_url(admin_url('admin.php?page=wc-settings&tab=btcpay_settings')) . '">',
+				'<a href="' . esc_url(admin_url('admin.php?page=wc-settings&tab=nofrixion_settings')) . '">',
 				'</a>'
 			);
 
 			\NoFrixion\WC\Admin\Notice::addNotice('error', $message);
 		}
-		*/
 	}
 
 	/**
@@ -129,6 +129,7 @@ class NoFrixionWCPlugin {
 
 		// todo: for submission to wp directory we probably need to iterate and sanitize here instead of the called function below.
 		$fields = $_POST['fields'];
+		$gateway = sanitize_key($_POST['gateway']);
 
 		try {
 			$available_gateways = WC()->payment_gateways->get_available_payment_gateways();
@@ -136,19 +137,19 @@ class NoFrixionWCPlugin {
 			$checkout = WC()->checkout();
 			$orderId = $checkout->create_order([]);
 			$order = wc_get_order($orderId);
-			$order->set_payment_method('nofrixion');
-			$order->set_payment_method_title($available_gateways[ 'nofrixion' ]->title);
+			$order->set_payment_method($gateway);
+			$order->set_payment_method_title($available_gateways[$gateway]->title);
 			$this->updateOrderFields($order, $fields);
 			$order->save();
 
 			// Process Payment via NoFrixion to get the PaymentRequestId.
-			$result = $available_gateways[ 'nofrixion' ]->process_payment($orderId);
+			$result = $available_gateways[$gateway]->process_payment($orderId);
 
 			wp_send_json_success(
 				[
 					'paymentRequestId' => $result['paymentRequestId'] ?? null,
 					'orderId' => $order ? $order->get_id() : 0,
-					'orderRedirect' => $available_gateways[ 'nofrixion' ]->get_return_url($order)
+					'orderRedirect' => $available_gateways[$gateway]->get_return_url($order)
 				]
 			);
 		} catch (\Throwable $e) {
@@ -192,25 +193,6 @@ class NoFrixionWCPlugin {
 				$order->$method(wc_clean(wp_unslash($field['value'])));
 			}
 		}
-	}
-
-	/**
-	 * Show only NoFrixion gateway on order payment page.
-	 */
-	public function showOnlyNofrixionGateway($available_gateways) {
-		global $woocommerce;
-
-		$endpoint = $woocommerce->query->get_current_endpoint();
-
-		if ($endpoint == 'order-pay') {
-			foreach ($available_gateways as $key => $data) {
-				if ($key !== 'nofrixion') {
-					unset($available_gateways[$key]);
-				}
-			}
-		}
-
-		return $available_gateways;
 	}
 
 	/**
@@ -332,5 +314,5 @@ add_action('init', function() {
 });
 
 // Initialize payment gateways and plugin.
-add_filter( 'woocommerce_payment_gateways', [ 'NoFrixionWCPlugin', 'initPaymentGateway' ] );
+add_filter( 'woocommerce_payment_gateways', [ 'NoFrixionWCPlugin', 'initPaymentGateways' ] );
 add_action( 'plugins_loaded', 'init_nofrixion', 0 );

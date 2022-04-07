@@ -26,7 +26,7 @@ class PaymentRequest extends AbstractClient
                 'Currency' => $currency,
                 'OriginUrl' => $originUrl,
                 'CallbackUrl' => $callbackUrl,
-                'PaymentMethodTypes' => $paymentMethodTypes,
+                'PaymentMethodTypes' => implode(',', $paymentMethodTypes),
                 'OrderID' => $orderId
             ]);
 
