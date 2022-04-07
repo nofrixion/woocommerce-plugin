@@ -16,9 +16,9 @@ class ApiHelper {
 
 	// todo: perf static instance
 	public function __construct() {
-		$this->mode     = get_option( 'nofrixion_mode', null );
-		$this->url      = $this->mode ? self::API_URL[ $this->mode ] : null;
-		$this->apiToken = get_option( 'nofrixion_token', null );
+		$this->mode     = get_option( 'nofrixion_mode', 'sandbox' );
+		$this->url      = $this->mode ? self::API_URL[ $this->mode ] : '';
+		$this->apiToken = get_option( 'nofrixion_token', '' );
 	}
 
 	public function isConfigured(): bool {
