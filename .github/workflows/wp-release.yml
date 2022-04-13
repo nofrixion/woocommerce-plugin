@@ -1,8 +1,8 @@
 #name: Build and deploy to WordPress.org
 on:
   push:
-#  release:
-#    types: [published]
+  release:
+    types: [published]
 jobs:
   tag:
     name: New release
