@@ -89,23 +89,7 @@ var submitPayFrame = function (e) {
 	console.log('Triggered submitpayframe');
 	if (noFrixionUpdateOrder()) {
 		console.log('Trigger submitting nofrixion form.');
-		nfpayByCard();
-		
-		/* let cardPaymentForm = document.getElementById('nf-cardPaymentForm');
-		const formData = new FormData(cardPaymentForm);
-		formData.append('expiryMonth', formData.get('expiry').split('/')[0]);
-		formData.append('expiryYear', formData.get('expiry').split('/')[1]);
-
-		fetch("https://api-sandbox.nofrixion.com/api/v1/paymentrequests/" + nfWCpaymentRequestID + "/cardsensitive", {
-			method: 'POST',
-			body: formData
-		}).then(res => {
-			if (res.status >= 200 && res.status < 300) {
-				return res.json()
-			} else {
-				throw new Error();
-			}
-		}).then(data => window.top.location.href = nfWCOrderRedirect).catch(e => console.error(e.message)); */
+		nfpayByCard();	
 	}
 
 	return false;
