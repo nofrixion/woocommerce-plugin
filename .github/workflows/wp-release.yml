@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           #upload_url: ${{ github.event.release.upload_url }}
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: 'https://api.github.com/repos/nofrixion/woocommerce-plugin/releases'
           asset_path: ${{ steps.deploy.outputs.zip-path }}
           asset_name: nofrixion-for-woocommerce.zip
           asset_content_type: application/zip
