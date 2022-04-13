@@ -28,22 +28,33 @@ class NoFrixionCard extends NoFrixionGateway {
 	}
 
 	public function payment_fields() {
-		echo '<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
-				<div id="nf-error" role="alert" class="alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
-		        <div class="form-row form-row-wide"><label>Card Number <span class="required">*</span></label>
-				<div id="nf-number-container" style="height:38px" />
-				</div>
-				<div style="display: row;">
-					<div style="display: table-cell;">
-						<input name="expiryMonth" type="text" autocomplete="off" placeholder="MM">
-					</div>
-					<div style="display: table-cell;">
-						<input name="expiryYear" type="text" autocomplete="off" placeholder="YYYY">
-					</div>
-					<div style="display: table-cell;">
-						<div id="nf-securityCode-container" style="height:38px" />
-					</div>
-				</div>
+		echo '
+			<div id="nf-error" role="alert" class="alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
+			<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
+				<table style="padding: 0;">
+					<tr style="padding: 0;">
+						<td colspan="2" style="padding: 0;">Card Number <span class="required">*</span></td>
+					</tr>
+					<tr style="padding: 0;">
+						<td colspan="2" style="background-color: #f2f2f2; padding:0 0 0 0.62em;">
+							<div id="nf-number-container" style="height:45px;"></div>
+						</td>
+					</tr>
+					<tr style="padding: 0;">
+						<td style="padding: 0;">Expiry <span class="required">*</span></td>
+						<td style="padding: 0;">CVN <span class="required">*</span></td>
+					</tr>
+					<tr style="padding: 0;">
+						<td style="padding: 0;">
+							<input type="text" id="nf-expiryMonth" name="expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
+							<span class="input-group-text">/</span>
+							<input type="text" id="nf-expiryYear" name="expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
+						</td>
+						<td style="padding: 0; background-color: #f2f2f2; padding-left: 0.62em;">
+							<div id="nf-securityCode-container" class="form-control nf-border-radius" style="height:45px; width: 4em;"></div>
+						</td>
+					</tr>
+				</table>
 		</form>';
 	}
 
