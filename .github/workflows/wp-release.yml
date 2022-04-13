@@ -1,8 +1,11 @@
 #name: Build and deploy to WordPress.org
 on:
   push:
-  release:
-    types: [published]
+  #release:
+  #  types: [published]
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 jobs:
   tag:
     name: New release
