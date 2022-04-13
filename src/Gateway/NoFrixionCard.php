@@ -29,23 +29,26 @@ class NoFrixionCard extends NoFrixionGateway {
 
 	public function payment_fields() {
 		echo '<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
+				<div id="nf-error" role="alert" class="alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
 		        <div class="form-row form-row-wide"><label>Card Number <span class="required">*</span></label>
-				<input name="cardNumber" type="text" autocomplete="off">
+				<div id="nf-number-container" style="height:38px" />
 				</div>
-				<div class="form-row form-row-first">
-					<label>Expiry Date <span class="required">*</span></label>
-					<input name="expiry" type="text" autocomplete="off" placeholder="MM / YYYY">
+				<div style="display: row;">
+					<div style="display: table-cell;">
+						<input name="expiryMonth" type="text" autocomplete="off" placeholder="MM">
+					</div>
+					<div style="display: table-cell;">
+						<input name="expiryYear" type="text" autocomplete="off" placeholder="YYYY">
+					</div>
+					<div style="display: table-cell;">
+						<div id="nf-securityCode-container" style="height:38px" />
+					</div>
 				</div>
-				<div class="form-row form-row-last">
-					<label>Card Code (CVC) <span class="required">*</span></label>
-					<input name="cardVerificationNumber" type="password" autocomplete="off" placeholder="CVC">
-				</div>
-				<div class="clear"></div>
 		</form>';
 	}
 
 	public function getTitle(): string {
-		return $this->get_option('title', 'NoFrixion Card (Mastercard, VISA)');
+		return $this->get_option('title', 'NoFrixion Card');
 	}
 
 	public function getDescription(): string {

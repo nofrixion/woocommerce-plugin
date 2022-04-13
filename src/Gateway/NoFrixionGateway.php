@@ -163,7 +163,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 
 		// let's suppose it is our payment processor JavaScript that allows to obtain a token
-		wp_enqueue_script( 'nofrixion_js', 'https://api-sandbox.nofrixion.com/js/payframe.js' );
+		wp_enqueue_script( 'nofrixion_js', 'https://api-sandbox.nofrixion.com/js/payelement.js' );
 
 		// and this is our custom JS in your plugin directory that works with token.js
 		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );

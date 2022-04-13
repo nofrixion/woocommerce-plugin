@@ -28,7 +28,7 @@ class NoFrixionPisp extends NoFrixionGateway {
 	}
 
 	public function payment_fields() {
-		echo "todo: PISP integration";
+		echo "COMING SOON";
 	}
 
 	public function getTitle(): string {

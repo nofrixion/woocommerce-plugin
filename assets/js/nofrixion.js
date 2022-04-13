@@ -2,7 +2,7 @@
  * Trigger ajax request to create order and payment request.
  */
 var createOrderPaymentRequest = function () {
-	// Only create order if nfPayFrame is not initialized yet.
+	// Only create order if nfPayElement is not initialized yet.
 	// Todo: when implementing PISP we need to make sure to update to new PaymentRequestID in case of switching payment
 	//  methods. Or to avoid logic here we could create card,pisp payment request IDs for now.
 
@@ -21,8 +21,12 @@ var createOrderPaymentRequest = function () {
 			if (response.data.paymentRequestId) {
 				try {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
-					//window.nfPayFrame = new NoFrixionPayFrame(nfWCpaymentRequestID, 'nf-payframe', 'https://api-sandbox.nofrixion.com');
-					//window.nfPayFrame.load();
+					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
+					//window.nfPayElement = new NoFrixionPayElementHeadless(nfWCpaymentRequestID, 'nf-cardNumber', 
+					//	'nf-cardSecurityNumber', 'nf-error', 'https://api-sandbox.nofrixion.com');
+					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(nfWCpaymentRequestID, 'nf-number-container', 
+						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
+					window.nfPayElement.load();
 					window.nfWCOrderId = response.data.orderId;
 					window.nfWCOrderRedirect = response.data.orderRedirect;
 
@@ -85,22 +89,7 @@ var submitPayFrame = function (e) {
 	console.log('Triggered submitpayframe');
 	if (noFrixionUpdateOrder()) {
 		console.log('Trigger submitting nofrixion form.');
-
-		let cardPaymentForm = document.getElementById('nf-cardPaymentForm');
-		const formData = new FormData(cardPaymentForm);
-		formData.append('expiryMonth', formData.get('expiry').split('/')[0]);
-		formData.append('expiryYear', formData.get('expiry').split('/')[1]);
-
-		fetch("https://api-sandbox.nofrixion.com/api/v1/paymentrequests/" + nfWCpaymentRequestID + "/cardsensitive", {
-			method: 'POST',
-			body: formData
-		}).then(res => {
-			if (res.status >= 200 && res.status < 300) {
-				return res.json()
-			} else {
-				throw new Error();
-			}
-		}).then(data => window.top.location.href = nfWCOrderRedirect).catch(e => console.error(e.message));
+		nfpayByCard();	
 	}
 
 	return false;
