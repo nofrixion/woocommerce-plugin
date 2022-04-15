@@ -26,9 +26,9 @@ jobs:
           npm run build
       - name: Create a zip and attach to release.
         uses: ncipollo/release-action@v1
-          with:
-            artifacts: "nofrixion-for-woocommerce.zip"
-            token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          artifacts: "nofrixion-for-woocommerce.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
       #- name: WordPress Plugin Deploy
       #  id: deploy
       #  uses: 10up/action-wordpress-plugin-deploy@stable
