@@ -13,16 +13,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install Composer dependencies
-        uses: php-actions/composer@v6
-        with:
-          dev: no
-          php_version: 7.4
-          php_extensions: bcmath
+      # Composer install not needed as long as we have the vendor/ directory committed.
+      #- name: Install Composer dependencies
+      #  uses: php-actions/composer@v6
+      #  with:
+      #    dev: no
+      #    php_version: 7.4
+      #    php_extensions: bcmath
       - name: Build assets and translation files
         run: |
           npm install
           npm run build
+      - name: Create a zip and attach to release.
+        uses: ncipollo/release-action@v1
+          with:
+            artifacts: "nofrixion-for-woocommerce.zip"
+            token: ${{ secrets.GITHUB_TOKEN }}
       #- name: WordPress Plugin Deploy
       #  id: deploy
       #  uses: 10up/action-wordpress-plugin-deploy@stable
@@ -32,12 +38,13 @@ jobs:
       #    SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
       #    SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
       #    SLUG: nofrixion-for-woocommerce
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ steps.deploy.outputs.zip-path }}
-          asset_name: nofrixion-for-woocommerce.zip
-          asset_content_type: application/zip
+      # This only works if the above Wordpress deploy step created the asset.
+      #- name: Upload release asset
+      #  uses: actions/upload-release-asset@v1
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  with:
+      #    upload_url: ${{ github.event.release.upload_url }}
+      #    asset_path: ${{ steps.deploy.outputs.zip-path }}
+      #    asset_name: nofrixion-for-woocommerce.zip
+      #    asset_content_type: application/zip
