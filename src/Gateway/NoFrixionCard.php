@@ -25,6 +25,12 @@ class NoFrixionCard extends NoFrixionGateway {
 		// Admin facing title and description.
 		$this->method_title       = 'NoFrixion Card';
 		$this->method_description = __('NoFrixion gateway supporting all available credit card payments.', 'nofrixion-for-woocommerce');
+
+		// Enable specific features.
+		$this->supports = [
+			'products',
+			'subscriptions'
+		];
 	}
 
 	public function payment_fields() {
