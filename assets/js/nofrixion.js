@@ -1,19 +1,17 @@
 /**
- * Trigger ajax request to create order and payment request.
+ * Trigger ajax request to create only payment request.
  */
-var createOrderPaymentRequest = function () {
-	// Only create order if nfPayElement is not initialized yet.
+var createPaymentRequest = function () {
 	// Todo: when implementing PISP we need to make sure to update to new PaymentRequestID in case of switching payment
 	//  methods. Or to avoid logic here we could create card,pisp payment request IDs for now.
 
 	if (window.nfWCpaymentRequestID === undefined) {
 
-		console.log('Creating payment request');
+		console.log('Creating payment request.');
 
 		let data = {
-			'action': 'nofrixion_payment_request',
+			'action': 'nofrixion_payment_request_init',
 			'apiNonce': NoFrixionWP.apiNonce,
-			'fields': jQuery('form.checkout').serializeArray(),
 			'gateway': jQuery('form[name="checkout"] input[name="payment_method"]:checked').val()
 		};
 
@@ -21,15 +19,14 @@ var createOrderPaymentRequest = function () {
 			if (response.data.paymentRequestId) {
 				try {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
+					//NoFrixionStorage.setItem('paymentRequestID', response.data.paymentRequestId, 90);
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					//window.nfPayElement = new NoFrixionPayElementHeadless(nfWCpaymentRequestID, 'nf-cardNumber', 
+					//window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-cardNumber',
 					//	'nf-cardSecurityNumber', 'nf-error', 'https://api-sandbox.nofrixion.com');
-					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(nfWCpaymentRequestID, 'nf-number-container', 
+					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
 						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
 					window.nfPayElement.load();
-					window.nfWCOrderId = response.data.orderId;
-					window.nfWCOrderRedirect = response.data.orderRedirect;
-
+					jQuery('form[name="checkout"]').append('<input type="hidden" name="payment_request_id" value="' + window.nfWCpaymentRequestID + '" />');
 					console.log(response);
 				} catch (ex) {
 					console.log('Error occurred initializing the payframe: ' + ex);
@@ -44,41 +41,46 @@ var createOrderPaymentRequest = function () {
 };
 
 /**
- * Update order address data and other changes.
+ * Trigger ajax request to create order and process checkout.
  */
-var noFrixionUpdateOrder = function() {
+var processPaymentRequestOrder = function () {
+	// Todo: when implementing PISP we need to make sure to update to new PaymentRequestID in case of switching payment
+	//  methods. Or to avoid logic here we could create card,pisp payment request IDs for now.
 
-	let updated = false;
+	let processedOrder = false;
 
-	// Only trigger when we have a NoFrixion order id and all required fields have values.
-	if (window.nfWCOrderId !== undefined && noFrixionValidateFields()) {
+	if (window.nfWCpaymentRequestID) {
 
-		console.log('Updating existing orderId ' + window.nfWCOrderId);
+		console.log('Creating order and processing checkout.');
 
-		let data = {
-			'action': 'nofrixion_order_update',
+		// Prepare form data and additional required data.
+		let formData = jQuery('form.checkout').serialize();
+		let additionalData = {
+			'action': 'nofrixion_payment_request',
 			'apiNonce': NoFrixionWP.apiNonce,
-			'fields': jQuery('form.checkout').serializeArray(),
-			'orderId': nfWCOrderId
+			'paymentRequestID': window.nfWCpaymentRequestID,
 		};
 
-		// We need to make sure the update worked before returning from this function, can do same a bit cleaner with .ajax()
+		let data = jQuery.param(additionalData) + '&' + formData;
+
+		// We need to make sure the order processing worked before returning from this function.
 		jQuery.ajaxSetup({async: false});
 
 		jQuery.post(NoFrixionWP.url, data, function (response) {
-			console.log('Success updating order.');
-			updated = true;
+			console.log('Received response when processing PaymentRequestOrder: ');
+			console.log(response);
+			if (response.paymentRequestId) {
+				processedOrder = true;
+			}
 		}).fail(function () {
-			console.log('Error updating order.');
+			alert('Error processing your request. Please contact support or try again.')
 		});
 
 		// Reenable async.
 		jQuery.ajaxSetup({async: true});
-
-		return updated;
 	}
 
-	return updated;
+	return processedOrder;
 };
 
 /**
@@ -87,18 +89,22 @@ var noFrixionUpdateOrder = function() {
 var submitPayFrame = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe');
-	if (noFrixionUpdateOrder()) {
+	if (processPaymentRequestOrder()) {
+		// Remove the local storage item for the next order.
 		console.log('Trigger submitting nofrixion form.');
-		nfpayByCard();	
+		nfpayByCard();
 	}
 
 	return false;
 };
 
+/**
+ * Makes sure to trigger on payment method changes and overriding the default button submit handler.
+ */
 var noFrixionSelected = function () {
 	var checkout_form = jQuery('form.woocommerce-checkout');
 	if (jQuery('form[name="checkout"] input[name="payment_method"]:checked').val() === 'nofrixion_card') {
-		createOrderPaymentRequest();
+		createPaymentRequest();
 		// Bind our custom event handler to checkout button.
 		checkout_form.on('checkout_place_order', submitPayFrame);
 	} else {
@@ -147,6 +153,42 @@ var noFrixionValidateFields = function () {
 
 	return !hasErrors;
 };
+
+/**
+ * Stores data in localStorage with expiry times.
+ */
+var NoFrixionStorage = {
+	getItem: function (key) {
+		const itemStr = localStorage.getItem(key)
+
+		if (!itemStr) {
+			return null
+		}
+
+		const item = JSON.parse(itemStr)
+		const now = new Date()
+
+		// Check if item expired.
+		if (now.getTime() > item.expiry) {
+			localStorage.removeItem(key)
+			return null
+		}
+		return item.value
+	},
+	setItem: function (key, value, expirySeconds) {
+		const now = new Date()
+
+		// Set the item with expiry.
+		const item = {
+			value: value,
+			expiry: now.getTime() + (expirySeconds * 1000),
+		}
+		localStorage.setItem(key, JSON.stringify(item))
+	},
+	removeItem: function (key) {
+		localStorage.removeItem(key);
+	}
+}
 
 /**
  * Main entry point.

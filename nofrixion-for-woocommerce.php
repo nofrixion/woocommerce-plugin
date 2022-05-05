@@ -26,6 +26,8 @@ define( 'NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce' );
 
 class NoFrixionWCPlugin {
 
+	const SESSION_PAYMENTREQUEST_ID = 'nofrixion_payment_request_id';
+
 	private static $instance;
 
 	public function __construct() {
@@ -33,10 +35,10 @@ class NoFrixionWCPlugin {
 
 		add_action('woocommerce_thankyou_nofrixion_card', [$this, 'orderStatusThankYouPage'], 10, 1);
 		add_action('woocommerce_thankyou_nofrixion_pisp', [$this, 'orderStatusThankYouPage'], 10, 1);
-		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
-		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequest'] );
-		add_action( 'wp_ajax_nofrixion_order_update', [$this, 'processAjaxUpdateOrder'] );
-		add_action( 'wp_ajax_nopriv_nofrixion_order_update', [$this, 'processAjaxUpdateOrder'] );
+		add_action( 'wp_ajax_nofrixion_payment_request_init', [$this, 'processAjaxPaymentRequestInit'] );
+		add_action( 'wp_ajax_nopriv_nofrixion_payment_request_init', [$this, 'processAjaxPaymentRequestInit'] );
+		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequestOrder'] );
+		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequestOrder'] );
 		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
 
 		if (is_admin()) {
@@ -116,47 +118,87 @@ class NoFrixionWCPlugin {
 	/**
 	 * Handles the AJAX callback from the Payment Request on the checkout page.
 	 */
-	public function processAjaxPaymentRequest() {
+	public function processAjaxPaymentRequestInit() {
+
+		Logger::debug('Entering processAjaxPaymentRequestInit()');
+
+		$nonce = $_POST['apiNonce'];
+		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
+			wp_die( 'Unauthorized!', '', [ 'response' => 401 ] );
+		}
+
+		$total = (float) WC()->cart->get_total();
+
+		try {
+			$apiHelper = new ApiHelper();
+			$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+			$result = $client->createPaymentRequest(
+				site_url(),
+				site_url() . '/dummyreturnurl',
+				\NoFrixion\WC\Helper\PreciseNumber::parseFloat($total),
+				null,
+				['card'],
+				null,
+				true,
+				'temp' . WC()->cart->get_customer()->get_id()
+			);
+
+			Logger::debug('result from dummy: ' . print_r($result, true));
+
+			// Store payment request id in the session.
+			// Todo: needs more testing if gets cleared after checkout complete to not reuse old data.
+			// WC()->session->set(self::SESSION_PAYMENTREQUEST_ID, $result['id']);
+
+			wp_send_json_success(
+				[
+					'paymentRequestId' => $result['id'] ?? null,
+				]
+			);
+		} catch (\Throwable $e) {
+			Logger::debug('Error creating payment request: ' . $e->getMessage());
+		}
+
+		wp_send_json_error();
+	}
+
+		/**
+	 * Handles the AJAX callback from the Payment Request on the checkout page.
+	 */
+	public function processAjaxPaymentRequestOrder() {
+
+		Logger::debug('Entering processAjaxPaymentRequestOrder()');
 
 		$nonce = $_POST['apiNonce'];
 		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
 			wp_die('Unauthorized!', '', ['response' => 401]);
 		}
 
-		if ( ! defined( 'WOOCOMMERCE_CHECKOUT' ) ) {
-			define( 'WOOCOMMERCE_CHECKOUT', true );
+		// Make sure the submitted payment request id and the one in the session are the same.
+		// Todo: needs more testing if gets cleared after checkout complete to not reuse old data.
+		/*
+		$sessionPRId = WC()->session->get(self::SESSION_PAYMENTREQUEST_ID);
+		$submittedPRId =  wc_clean( wp_unslash( $_POST['payment_request_id']));
+		if ($sessionPRId !== $submittedPRId) {
+			Logger::debug('Submitted and session payment ids differ, aborting.');
+			Logger::debug('Submitted: ' . $submittedPRId . ' Session: ' . $sessionPRId);
+			wp_send_json_error();
 		}
+		*/
 
-		// todo: for submission to wp directory we probably need to iterate and sanitize here instead of the called function below.
-		$fields = $_POST['fields'];
-		$gateway = sanitize_key($_POST['gateway']);
+		wc_maybe_define_constant( 'WOOCOMMERCE_CHECKOUT', true );
 
 		try {
-			$available_gateways = WC()->payment_gateways->get_available_payment_gateways();
-			$cart = WC()->cart;
-			$checkout = WC()->checkout();
-			$orderId = $checkout->create_order([]);
-			$order = wc_get_order($orderId);
-			$order->set_payment_method($gateway);
-			$order->set_payment_method_title($available_gateways[$gateway]->title);
-			$this->updateOrderFields($order, $fields);
-			$order->save();
-
-			// Process Payment via NoFrixion to get the PaymentRequestId.
-			$result = $available_gateways[$gateway]->process_payment($orderId);
-
-			wp_send_json_success(
-				[
-					'paymentRequestId' => $result['paymentRequestId'] ?? null,
-					'orderId' => $order ? $order->get_id() : 0,
-					'orderRedirect' => $available_gateways[$gateway]->get_return_url($order)
-				]
-			);
+			WC()->checkout()->process_checkout();
 		} catch (\Throwable $e) {
-			\NoFrixion\WC\Helper\Logger::debug('Error processing payment request ajax callback: ' . $e->getMessage());
+			Logger::debug('Error processing payment request ajax callback: ' . $e->getMessage());
 		}
+	}
 
-		wp_send_json_error("Error processing request.");
+	public function orderHasSubscription($order) {
+		if (!function_exists('wcs_order_contains_subscription')) {
+			return false;
+		}
+		return wcs_order_contains_subscription($order);
 	}
 
 	public function processAjaxUpdateOrder() {
@@ -207,6 +249,7 @@ class NoFrixionWCPlugin {
 
 		$currentOrderStatus = $order->get_status();
 		$paymentRequestID = $order->get_meta('NoFrixion_id');
+		$isSubscription = (bool) $order->get_meta('NoFrixion_isSubscription');
 
 		if (
 			!in_array($currentOrderStatus, ['processing', 'completed', 'failed']) &&
@@ -217,10 +260,12 @@ class NoFrixionWCPlugin {
 				$apiHelper = new ApiHelper();
 
 				$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
-				$paymentRequest = $client->getPaymentRequestStatus($paymentRequestID);
+				$paymentRequest = $client->getPaymentRequest($paymentRequestID);
+				$payment = $paymentRequest['result']['payments'][0] ?? null;
+				$tokenizedCard = $paymentRequest['tokenisedCards'][0] ?? null;
 
-				if (isset($paymentRequest['result'])) {
-					switch ( $paymentRequest['result'] ) {
+				if (isset($paymentRequest['result']['result'])) {
+					switch ( $paymentRequest['result']['result'] ) {
 						case "FullyPaid":
 							$order->payment_complete();
 							$order->save();
@@ -234,6 +279,21 @@ class NoFrixionWCPlugin {
 							// Do nothing, keeps order in pending state.
 						default:
 							// Do nothing.
+					}
+
+
+					if (is_null($payment)) {
+						Logger::debug('Order received page: paymentRequest does not have any payments. ID: ' . $paymentRequestID);
+					} else {
+						// Store the card token and authorization for future charges.
+						if ($isSubscription) {
+							$order->add_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
+							$order->add_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
+							$order->add_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+							$order->add_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
+							$order->add_order_note( _x('Received card token for future charges of a subscription.', 'nofrixion-for-woocommerce'));
+							$order->save();
+						}
 					}
 				}
 

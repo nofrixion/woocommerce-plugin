@@ -18,7 +18,6 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		// General gateway setup.
 		// Do not set id here.
 
-
 		//$this->icon              = $this->getIcon();
 
 		$this->order_button_text = __( 'Place order', 'nofrixion-for-woocommerce' );
@@ -41,12 +40,13 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		$this->apiHelper = new ApiHelper();
 
-		/* $this->supports = array( 
-               'products', 
+		// Example of available features, needs to be set in specific payment plugins.
+		/* $this->supports = array(
+               'products',
 			   'refunds',
                'subscriptions',
-               'subscription_cancellation', 
-               'subscription_suspension', 
+               'subscription_cancellation',
+               'subscription_suspension',
                'subscription_reactivation',
                'subscription_amount_changes',
                'subscription_date_changes',
@@ -57,9 +57,11 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
           ); */
 
 		// Actions.
-		add_action('woocommerce_api_nofrixion', [$this, 'processWebhook']);
+		// Currently, no need to process a webhook / IPN callback.
+		// add_action('woocommerce_api_nofrixion', [$this, 'processWebhook']);
 		add_action('wp_enqueue_scripts', [$this, 'addScripts']);
 		add_action('woocommerce_update_options_payment_gateways_' . $this->getId(), [$this, 'process_admin_options']);
+		add_action( 'woocommerce_scheduled_subscription_payment_' . $this->getId(), array( $this, 'scheduled_subscription_payment' ), 10, 2 );
 	}
 
 	/**
@@ -99,7 +101,6 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		if ( ! $this->apiHelper->isConfigured() ) {
 			Logger::debug( 'NoFrixion Server API connection not configured, aborting. Please go to NoFrixion settings and set it up.' );
-			// todo: show error notice/make sure it fails
 			throw new \Exception( __( "Can't process order. No merchant token configured, aborting.", 'nofrixion-for-woocommerce' ) );
 		}
 
@@ -111,38 +112,53 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			throw new \Exception( $message );
 		}
 
-		// Check for existing invoice and redirect instead.
-		/*
-		if ( $this->validInvoiceExists( $orderId ) ) {
-			$existingInvoiceId = get_post_meta( $orderId, 'NoFrixion_id', true );
-			Logger::debug( 'Found existing NoFrixion Server invoice and redirecting to it. Invoice id: ' . $existingInvoiceId );
+		// Load payment request id from session.
+		// $paymentRequestId = WC()->session->get(\NoFrixionWCPlugin::SESSION_PAYMENTREQUEST_ID);
 
-			return [
-				'result'   => 'success',
-				'redirect' => $this->apiHelper->getInvoiceRedirectUrl( $existingInvoiceId ),
-			];
+		$paymentRequestId = wc_clean( wp_unslash( $_POST['paymentRequestID']));
+
+		Logger::debug('Submitted payment request id ' . $paymentRequestId);
+
+		if (!$paymentRequestId) {
+			$msg_no_prid = 'No payment request id found, aborting.';
+			Logger::debug( $msg_no_prid );
+			throw new \Exception( $msg_no_prid );
 		}
-		*/
 
-		// Create an invoice.
-		Logger::debug( 'Creating PaymentRequest on NoFrixion.' );
-		if ( $paymentRequest = $this->createPaymentRequest( $order ) ) {
+		// Check if order contains a subscription.
+		$hasSubscription = $this->checkWCOrderHasSubscription($order);
+		Logger::debug( 'Order contains a subscription: ' . ($hasSubscription ? 'true' : 'false') );
 
-			// Todo: update order status and NoFrixion meta data.
+		// Update the payment request with the final order data.
+		Logger::debug( 'Updating PaymentRequest on NoFrixion.' );
+		if ( $paymentRequest = $this->updatePaymentRequest( $paymentRequestId, $order, $hasSubscription ) ) {
 
-			Logger::debug( 'PaymentRequest creation successful, redirecting user.' );
-
-			Logger::debug($paymentRequest, true);
+			Logger::debug( 'Updating payment request successful, redirecting user.' );
+			Logger::debug( 'PaymentRequest data: ' );
+			Logger::debug( $paymentRequest );
 
 			return [
 				'result'   => 'success',
 				'redirect' => $order->get_checkout_payment_url(false),
 				'orderId' => $order->get_id(),
 				'paymentRequestId' => $paymentRequest['id'],
+				'hasSubscription' => $hasSubscription
 			];
 		}
 	}
 
+	public function checkWCOrderHasSubscription(\WC_order $order): bool {
+		// todo: check why wcs_order_contains_subscription() does not work
+		if (\function_exists('wcs_order_contains_subscription')) {
+			$result = \WC_Subscriptions_Cart::cart_contains_subscription();
+			Logger::debug('Order contains subscription: ' . ($result ? 'true' : 'false'));
+			return $result;
+		} else {
+			Logger::debug('Function wcs_order_contains_subscription() does not exist. No Subscriptions plugin installed.');
+		}
+
+		return false;
+	}
 
 	public function getId(): string {
 		return $this->id;
@@ -204,7 +220,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			// Note: getallheaders() CamelCases all headers for PHP-FPM/Nginx but for others maybe not, so "NoFrixion-Sig" may becomes "Btcpay-Sig".
 			$headers = getallheaders();
 			foreach ($headers as $key => $value) {
-				if (strtolower($key) === 'btcpay-sig') {
+				if (strtolower($key) === 'nofrixion-sig') {
 					$signature = $value;
 				}
 			}
@@ -388,9 +404,10 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * Create an invoice on NoFrixion Server.
+	 * Create an payment request on NoFrixion Server.
 	 */
-	public function createPaymentRequest( \WC_Order $order ): ?array {
+	public function createPaymentRequest( \WC_Order $order, bool $createToken = false ): ?array {
+		Logger::debug('Entering createPaymentRequest()');
 		// In case some plugins customizing the order number we need to pass that along, defaults to internal ID.
 		$orderNumber = $order->get_order_number();
 		Logger::debug( 'Got order number: ' . $orderNumber . ' and order ID: ' . $order->get_id() );
@@ -401,6 +418,12 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$currency = $order->get_currency();
 		$amount = PreciseNumber::parseString( $order->get_total() ); // unlike method signature suggests, it returns string.
 
+		// We need to set the customer id for card tokens on subscriptions.
+		$userId = get_current_user_id();
+		if ($userId === 0) {
+			$userId = hash('sha256', $order->get_billing_email());
+		}
+
 		try {
 			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
 
@@ -410,7 +433,9 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$amount,
 				$currency,
 				[str_replace('nofrixion_', '', $this->getId())], // pass card, pisp, .. here
-				$orderNumber
+				$orderNumber,
+				$createToken,
+				$createToken ? (string) $userId : null,
 			);
 
 			$this->updateOrderMetadata( $order->get_id(), $paymentRequest );
@@ -419,6 +444,53 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		} catch ( \Throwable $e ) {
 			Logger::debug( $e->getMessage(), true );
+		}
+
+		return null;
+	}
+
+	/**
+	 * Update payment request on NoFrixion Server.
+	 */
+	public function updatePaymentRequest(string $paymentRequestId, \WC_Order $order, bool $createToken = false ): ?array {
+		Logger::debug('Entering updatePaymentRequest()');
+		// In case some plugins customizing the order number we need to pass that along, defaults to internal ID.
+		$orderNumber = $order->get_order_number();
+		Logger::debug( 'Got order number: ' . $orderNumber . ' and order ID: ' . $order->get_id() );
+
+		$originUrl     = get_site_url();
+		Logger::debug( 'Setting origin url to: ' . $originUrl );
+
+		$currency = $order->get_currency();
+		$amount = PreciseNumber::parseString( $order->get_total() ); // unlike method signature suggests, it returns string.
+
+		// We need to set the customer id for card tokens on subscriptions.
+		$userId = get_current_user_id();
+		if ($userId === 0) {
+			$userId = hash('sha256', $order->get_billing_email());
+		}
+
+		try {
+			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+
+			$paymentRequest = $client->updatePaymentRequest(
+				$paymentRequestId,
+				$originUrl,
+				$this->get_return_url($order),
+				$amount,
+				$currency,
+				[str_replace('nofrixion_', '', $this->getId())], // pass card, pisp, .. here
+				$orderNumber,
+				$createToken,
+				$createToken ? (string) $userId : null,
+			);
+
+			$this->updateOrderMetadata( $order->get_id(), $paymentRequest );
+
+			return $paymentRequest;
+
+		} catch ( \Throwable $e ) {
+			Logger::debug( 'Error updating payment request: ' . $e->getMessage(), true );
 		}
 
 		return null;
@@ -445,5 +517,97 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	 */
 	protected function updateOrderMetadata( int $orderId, array $paymentRequest ) {
 		update_post_meta( $orderId, 'NoFrixion_id', $paymentRequest['id'] );
+		update_post_meta( $orderId, 'NoFrixion_isSubscription', $paymentRequest['cardCreateToken'] ? 1 : 0);
+		update_post_meta( $orderId, 'NoFrixion_CustomerID', $paymentRequest['customerID'] ?? '');
+	}
+
+	public function scheduled_subscription_payment(float $amount, \WC_Order $renewalOrder) {
+		Logger::debug('Subs: Triggered scheduled_subscription_payment() hook.');
+		Logger::debug('Subs: amount: ' . $amount . ' renewal order id: ' . $renewalOrder->get_id());
+
+		$subscriptions = wcs_get_subscriptions_for_renewal_order( $renewalOrder );
+		$subscription  = array_pop( $subscriptions );
+		$failedMsg = 'Subs: Could not process renewal order: ' . $renewalOrder->get_id();
+
+		if (!($parentOrderId = $subscription->get_parent_id())) {
+			Logger::debug('Subs: Failed to load parent order id, aborting.', true);
+			$renewalOrder->update_status('failed', $failedMsg);
+			return ['result' => 'failure'];
+		}
+
+		if (!($parentOrder = new \WC_Order($parentOrderId))) {
+			Logger::debug('Subs: Failed to load parent order, aborting.', true);
+			$renewalOrder->update_status('failed', $failedMsg);
+			return ['result' => 'failure'];
+		}
+
+		if (!($tokenisedCardId = $parentOrder->get_meta('NoFrixion_tokenisedCard_id'))) {
+			Logger::debug('Subs: Failed to load tokenisedCard_id from order: ' . $parentOrderId, true);
+			$renewalOrder->update_status('failed', $failedMsg);
+			return ['result' => 'failure'];
+		}
+
+		Logger::debug('Subs: renewalOrder object: ' . print_r($renewalOrder));
+		Logger::debug('Subs: Subscription object: ' . print_r($subscription));
+
+		// Prepare data.
+		$orderNumber = $renewalOrder->get_order_number();
+		$originUrl = get_site_url();
+		$currency = $renewalOrder->get_currency();
+		$amountFormatted = PreciseNumber::parseFloat( $amount );
+
+		// PaymentRequest client.
+		$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+
+		// Create payment request with cardtoken payment type.
+		try {
+			$paymentRequest = $client->createPaymentRequest(
+				$originUrl,
+				$this->get_return_url($renewalOrder),
+				$amountFormatted,
+				$currency,
+				['cardtoken'],
+				$orderNumber
+			);
+
+			$renewalOrder->update_meta_data('NoFrixion_isSubscription',1);
+			$renewalOrder->update_meta_data('NoFrixion_tokenisedCard_id', $tokenisedCardId);
+
+			Logger::debug('Subs: Successfully created new payment request: ' . print_r($paymentRequest, true));
+
+		} catch ( \Throwable $e ) {
+			Logger::debug( 'Subs: Error creating payment request for subs renewal: ' . $e->getMessage(), true );
+			return ['result' => 'failure'];
+		}
+
+		try {
+			// Charge payment request with tokenised card.
+			$paywithTokenResult = $client->payWithCardToken(
+				$paymentRequest['id'],
+				$tokenisedCardId
+			);
+
+			$renewalOrder->update_meta_data('NoFrixion_renewal_status', $paywithTokenResult['status']);
+			$renewalOrder->update_meta_data('NoFrixion_renewal_authorizedAmount', $paywithTokenResult['authorizedAmount']);
+			$renewalOrder->update_meta_data('NoFrixion_renewal_transactionID', $paywithTokenResult['transactionID']);
+
+			Logger::debug('Subs: Successfully created pay with token request: ' . print_r($paywithTokenResult, true));
+
+			if ($paywithTokenResult['status'] === 'AUTHORIZED') {
+				$renewalOrder->payment_complete();
+				$renewalOrder->add_order_note('Renewal of subscription successfully processed. TransactionID: ' . $paywithTokenResult['transactionID']);
+				Logger::debug('Subs: Successfully completed renewal payment. Exiting.');
+				return ['result' => 'success'];
+			} else {
+				Logger::debug('Subs: Pay with token returned other status than AUTHORIZED, payment failed.');
+				$renewalOrder->update_status('failed', $failedMsg);
+				return ['result' => 'failure'];
+			}
+
+		} catch (\Throwable $e) {
+			Logger::debug( 'Subs: Error on request for paying with card token: ' . $e->getMessage(), true );
+			$renewalOrder->update_status('failed', $failedMsg);
+			return ['result' => 'failure'];
+		}
 	}
 }
