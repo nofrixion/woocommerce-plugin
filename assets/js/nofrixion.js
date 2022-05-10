@@ -41,6 +41,45 @@ var createPaymentRequest = function () {
 };
 
 /**
+ * Trigger ajax request to create only payment request for changing payment method.
+ */
+var createPaymentRequestChangePM = function () {
+
+	if (window.nfWCpaymentRequestID === undefined) {
+
+		console.log('Creating payment request (pm change).');
+
+		let data = {
+			'action': 'nofrixion_payment_request_update_pm',
+			'apiNonce': NoFrixionWP.apiNonce,
+			'gateway': jQuery('input[name="payment_method"]:checked').val(),
+			'orderId': jQuery('input[name="woocommerce_change_payment"]').val()
+		};
+
+		jQuery.post(NoFrixionWP.url, data, function (response) {
+			if (response.data.paymentRequestId) {
+				try {
+					window.nfWCpaymentRequestID = response.data.paymentRequestId;
+					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
+					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
+						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
+					window.nfPayElement.load();
+					jQuery('form#order_review').append('<input type="hidden" name="paymentRequestID" value="' + window.nfWCpaymentRequestID + '" />');
+					console.log(response);
+				} catch (ex) {
+					console.log('Error occurred initializing the payframe: ' + ex);
+				}
+			}
+		}).fail(function () {
+			alert('Error processing your request xx. Please contact support or try again.')
+		});
+	}
+
+	return false;
+};
+
+
+/**
  * Trigger ajax request to create order and process checkout.
  */
 var processPaymentRequestOrder = function () {
@@ -66,9 +105,10 @@ var processPaymentRequestOrder = function () {
 		// We need to make sure the order processing worked before returning from this function.
 		jQuery.ajaxSetup({async: false});
 
-		jQuery.post(NoFrixionWP.url, data, function (response) {
+		jQuery.post(wc_checkout_params.checkout_url, data, function (response) {
 			console.log('Received response when processing PaymentRequestOrder: ');
 			console.log(response);
+			// Todo handle returned WC errors.
 			if (response.paymentRequestId) {
 				processedOrder = true;
 			}
@@ -99,6 +139,16 @@ var submitPayFrame = function (e) {
 };
 
 /**
+ * Trigger payframe (change payment method) button submit.
+ */
+var submitPayFrameChangePM = function (e) {
+	e.preventDefault();
+	console.log('Triggered submitpayframe (change pm)');
+	nfpayByCard();
+	return false;
+};
+
+/**
  * Makes sure to trigger on payment method changes and overriding the default button submit handler.
  */
 var noFrixionSelected = function () {
@@ -110,6 +160,21 @@ var noFrixionSelected = function () {
 	} else {
 		// Undo bind custom event handler.
 		checkout_form.off('checkout_place_order', submitPayFrame);
+	}
+}
+
+/**
+ * Makes sure to trigger on payment method changes and overriding the default button submit handler.
+ */
+var noFrixionChangePaymentMethod = function () {
+	var order_review_form = jQuery('form#order_review');
+	if (jQuery('input[name="payment_method"]:checked', order_review_form).val() === 'nofrixion_card') {
+		createPaymentRequestChangePM();
+		// Bind our custom event handler to checkout button.
+		order_review_form.on('submit', submitPayFrameChangePM);
+	} else {
+		// Undo bind custom event handler.
+		order_review_form.off('submit', submitPayFrameChangePM);
 	}
 }
 
@@ -195,8 +260,12 @@ var NoFrixionStorage = {
  */
 jQuery(function ($) {
 	// Listen on Update cart and change of payment methods.
-	$('body').on('updated_checkout payment_method_selected', function (event) {
+	$('body').on('init_checkout updated_checkout payment_method_selected', function (event) {
 		console.log('Fired event: ' + event.type);
 		noFrixionSelected();
 	});
+	// On payment method change page, initialize NoFrixion.
+	if ( 'yes' === NoFrixionWP.is_change_payment_page || 'yes' === NoFrixionWP.is_pay_for_order_page ) {
+		noFrixionChangePaymentMethod();
+	}
 });

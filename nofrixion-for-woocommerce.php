@@ -28,6 +28,8 @@ class NoFrixionWCPlugin {
 
 	const SESSION_PAYMENTREQUEST_ID = 'nofrixion_payment_request_id';
 
+	const CALLBACK_PM_CHANGE = 'order-payment-method-change';
+
 	private static $instance;
 
 	public function __construct() {
@@ -37,6 +39,8 @@ class NoFrixionWCPlugin {
 		add_action('woocommerce_thankyou_nofrixion_pisp', [$this, 'orderStatusThankYouPage'], 10, 1);
 		add_action( 'wp_ajax_nofrixion_payment_request_init', [$this, 'processAjaxPaymentRequestInit'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request_init', [$this, 'processAjaxPaymentRequestInit'] );
+		add_action( 'wp_ajax_nofrixion_payment_request_update_pm', [$this, 'processAjaxPaymentRequestUpdatePm'] );
+		add_action( 'wp_ajax_nopriv_nofrixion_payment_request_update_pm', [$this, 'processAjaxPaymentRequestUpdatePm'] );
 		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequestOrder'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequestOrder'] );
 		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
@@ -161,6 +165,53 @@ class NoFrixionWCPlugin {
 		wp_send_json_error();
 	}
 
+	/**
+	 * Handles the AJAX callback from the Payment Request on the checkout page.
+	 */
+	public function processAjaxPaymentRequestUpdatePm() {
+
+		Logger::debug('Entering processAjaxPaymentRequestUpdatePm()');
+
+		$nonce = $_POST['apiNonce'];
+		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
+			wp_die( 'Unauthorized!', '', [ 'response' => 401 ] );
+		}
+
+		$orderId = wc_sanitize_order_id($_POST['orderId']);
+
+
+		$callbackUrl = site_url() . '/'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'/';
+		$callbackUrl .= '?orderId=' . $orderId;
+
+		try {
+			$apiHelper = new ApiHelper();
+			$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+			$result = $client->createPaymentRequest(
+				site_url(),
+				$callbackUrl,
+				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				null,
+				['card'],
+				null,
+				true,
+				get_current_user_id()
+			);
+
+			Logger::debug('Result creating PR for payment method change: ' . print_r($result, true));
+
+			update_post_meta($orderId, 'NoFrixion_pmupdate_PrId', $result['id']);
+
+			wp_send_json_success(
+				[
+					'paymentRequestId' => $result['id'] ?? null,
+				]
+			);
+		} catch (\Throwable $e) {
+			Logger::debug('Error creating payment request: ' . $e->getMessage());
+		}
+
+		wp_send_json_error();
+	}
 		/**
 	 * Handles the AJAX callback from the Payment Request on the checkout page.
 	 */
@@ -336,6 +387,7 @@ class NoFrixionWCPlugin {
 		";
 	}
 
+
 	public function addScripts() {
 		// Not needed for now:
 		// todo: remove incl files if of no use.
@@ -372,6 +424,31 @@ add_action('init', function() {
 	// Adding textdomain and translation support.
 	load_plugin_textdomain('nofrixion-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/');
 });
+
+// To be able to use the endpoint without appended url segments we need to do this.
+add_filter('request', function($vars) {
+	if (isset($vars[NoFrixionWCPlugin::CALLBACK_PM_CHANGE])) {
+		$vars[NoFrixionWCPlugin::CALLBACK_PM_CHANGE] = true;
+	}
+	return $vars;
+});
+
+// Adding template redirect handling for payment method change redirect.
+add_action( 'template_redirect', function() {
+	global $wp_query;
+
+	// Only continue on a btcpay-settings-callback request.
+	if ( ! isset( $wp_query->query_vars[ NoFrixionWCPlugin::CALLBACK_PM_CHANGE ] ) ) {
+		return;
+	}
+
+	if (! isset( $wp_query->query_vars['orderId'] ) ) {
+		Logger::debug('Missing params on pm change callback.');
+
+	}
+ 	die('payment method change callbackURL hit, orderId: ' . $wp_query->query_vars['orderId']);
+});
+
 
 // Initialize payment gateways and plugin.
 add_filter( 'woocommerce_payment_gateways', [ 'NoFrixionWCPlugin', 'initPaymentGateways' ] );

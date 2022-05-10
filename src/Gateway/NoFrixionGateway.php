@@ -61,7 +61,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		// add_action('woocommerce_api_nofrixion', [$this, 'processWebhook']);
 		add_action('wp_enqueue_scripts', [$this, 'addScripts']);
 		add_action('woocommerce_update_options_payment_gateways_' . $this->getId(), [$this, 'process_admin_options']);
-		add_action( 'woocommerce_scheduled_subscription_payment_' . $this->getId(), array( $this, 'scheduled_subscription_payment' ), 10, 2 );
+		add_action( 'woocommerce_scheduled_subscription_payment_' . $this->getId(), array( $this, 'scheduledSubscriptionPayment' ), 10, 2 );
+		add_action( 'woocommerce_subscription_failing_payment_method_updated_' . $this->getId(), array( $this, 'updateSubscriptionPaymentMethod' ), 10, 2 );
 	}
 
 	/**
@@ -205,6 +206,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
 			'nfApiUrl' => $this->get_option('url', null),
+			'is_change_payment_page' => isset( $_GET['change_payment_method'] ) ? 'yes' : 'no',
+			'is_pay_for_order_page' => is_wc_endpoint_url( 'order-pay' ) ? 'yes' : 'no',
 		] );
 
 		wp_enqueue_script( 'woocommerce_nofrixion' );
@@ -521,7 +524,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		update_post_meta( $orderId, 'NoFrixion_CustomerID', $paymentRequest['customerID'] ?? '');
 	}
 
-	public function scheduled_subscription_payment(float $amount, \WC_Order $renewalOrder) {
+	public function scheduledSubscriptionPayment(float $amount, \WC_Order $renewalOrder) {
 		Logger::debug('Subs: Triggered scheduled_subscription_payment() hook.');
 		Logger::debug('Subs: amount: ' . $amount . ' renewal order id: ' . $renewalOrder->get_id());
 
@@ -610,4 +613,18 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			return ['result' => 'failure'];
 		}
 	}
+
+	public function updateSubscriptionPaymentMethod($originalSubscription, $renewalOrder) {
+		Logger::debug('UpdateSubscriptionPaymentMethod():');
+		Logger::debug('$origSubs: ' . print_r($originalSubscription, true));
+		Logger::debug('$renewalOrder: ' . print_r($renewalOrder, true));
+		$subscription = wc_get_order($originalSubscription->id);
+		Logger::debug('$subscription: ' . print_r($subscription, true));
+		/*
+		$subscription->update_meta_data('NoFrixion_tokenisedCard_id', $renewalOrder->NoFrixion_tokenisedCard_id);
+		$subscription->update_meta_data('NoFrixion_id', $renewalOrder->NoFrixion_id);
+		$subscription->save();
+		*/
+	}
+
 }

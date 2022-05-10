@@ -15,7 +15,7 @@ class Notice {
 				$dismiss = $dismissible ? ' is-dismissible' : '';
 				?>
 				<div class="notice notice-<?php echo esc_attr( $level ) . esc_attr( $dismiss ); ?>" style="padding:12px 12px">
-					<?php echo '<strong>NoFrixion Server:</strong> ' . wp_kses_post( $message ) ?>
+					<?php echo '<strong>NoFrixion:</strong> ' . wp_kses_post( $message ) ?>
 				</div>
 				<?php
 			}
