@@ -62,9 +62,9 @@ class NoFrixionCard extends NoFrixionGateway {
 					</tr>
 					<tr style="padding: 0;">
 						<td style="padding: 0;">
-							<input type="text" id="nf-expiryMonth" name="expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
+							<input type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
 							<span class="input-group-text">/</span>
-							<input type="text" id="nf-expiryYear" name="expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
+							<input type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
 						</td>
 						<td style="padding: 0; background-color: #f2f2f2; padding-left: 0.62em;">
 							<div id="nf-securityCode-container" class="form-control nf-border-radius" style="height:45px; width: 4em;"></div>

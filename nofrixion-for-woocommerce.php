@@ -194,12 +194,14 @@ class NoFrixionWCPlugin {
 				['card'],
 				null,
 				true,
-				get_current_user_id()
+				get_current_user_id(),
+				true
 			);
 
 			Logger::debug('Result creating PR for payment method change: ' . print_r($result, true));
 
 			update_post_meta($orderId, 'NoFrixion_pmupdate_PrId', $result['id']);
+			update_post_meta($orderId, 'NoFrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
 
 			wp_send_json_success(
 				[
@@ -338,10 +340,10 @@ class NoFrixionWCPlugin {
 					} else {
 						// Store the card token and authorization for future charges.
 						if ($isSubscription) {
-							$order->add_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
-							$order->add_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
-							$order->add_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
-							$order->add_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
+							$order->update_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
+							$order->update_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
+							$order->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+							$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
 							$order->add_order_note( _x('Received card token for future charges of a subscription.', 'nofrixion-for-woocommerce'));
 							$order->save();
 						}
@@ -421,6 +423,9 @@ function init_nofrixion() {
  * Bootstrap stuff on init.
  */
 add_action('init', function() {
+	// Register custom endpoints.
+	add_rewrite_endpoint(NoFrixionWCPlugin::CALLBACK_PM_CHANGE, EP_ROOT);
+
 	// Adding textdomain and translation support.
 	load_plugin_textdomain('nofrixion-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/');
 });
@@ -442,11 +447,76 @@ add_action( 'template_redirect', function() {
 		return;
 	}
 
-	if (! isset( $wp_query->query_vars['orderId'] ) ) {
-		Logger::debug('Missing params on pm change callback.');
-
+	if (! $subscriptionId = sanitize_text_field($_GET['orderId'])) {
+		wp_die('Error, no order ID provided, aborting.');
 	}
- 	die('payment method change callbackURL hit, orderId: ' . $wp_query->query_vars['orderId']);
+
+	if (! $subscription = new \WC_Subscription($subscriptionId)) {
+		Logger::debug('Update PM callback: Could not load order, orderId: ' . $subscriptionId);
+		wp_die('Could not load order, aborting');
+	}
+
+	if (! $updatedPrId = $subscription->get_meta('NoFrixion_pmupdate_PrId')) {
+		Logger::debug('Order ' . $subscriptionId . ' has no pmupdatePrId set, aborting.');
+		wp_die('Could not find update payment method reference, aborting');
+	}
+
+	// Load the parent order.
+	$parentOrderId = $subscription->get_parent_id();
+	if (! $parentOrder = new \WC_Order($parentOrderId)) {
+		Logger::debug('Update PM callback: Could not load parent order of orderId: ' . $subscriptionId);
+		wp_die('Could not find parent order reference, aborting');
+	}
+
+	Logger::debug('Found parent order ' . $parentOrderId . '. Fetching PR data and updating meta.');
+
+	$hasErrors = false;
+	$messages = [];
+	$errors = [];
+	$redirectUrl = $subscription->get_checkout_payment_url();
+
+	// Get the new cc tokenised card id and overwrite it on the parent order for the future charges.
+	try {
+		$apiHelper = new ApiHelper();
+		$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+		$updatedPr = $client->getPaymentRequest($updatedPrId);
+
+		$payment = $updatedPr['result']['payments'][0] ?? null;
+		$tokenizedCard = $updatedPr['tokenisedCards'][0] ?? null;
+		$paymentStatus = $updatedPr['result']['result'];
+
+		Logger::debug('TokenisedCardId: ' . $tokenizedCard['id']);
+		Logger::debug('Payment status: ' . $paymentStatus);
+		// Update order status?
+		if ($tokenizedCard && $paymentStatus === 'FullyPaid') {
+			// Save tokenized card id on current and parent order.
+			$subscription->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+			$subscription->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
+			$subscription->save();
+			$subscription->add_order_note( __('Received card token for future charges of a subscription, updated parent order.', 'nofrixion-for-woocommerce'));
+			$parentOrder->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+			$parentOrder->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
+			$parentOrder->update_meta_data('NoFrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
+			$parentOrder->save();
+			$parentOrder->add_order_note( sprintf(__('Updated card token after payment method change by order/subscription id %u.', 'nofrixion-for-woocommerce'), $subscriptionId));
+			Logger::debug('Updated order and parent order with new tokenised card details.');
+
+			WC_Subscriptions_Change_Payment_Gateway::update_payment_method( $subscription, $subscription->get_payment_method());
+
+			$messages[] = __('Thank you. Your card details have been updated.', 'nofrixion-for-woocommerce');
+		} else {
+			$subscription->add_order_note( __('Card authorization failed on payment method change.', 'nofrixion-for-woocommerce'));
+			$errors[] = __('Something went wrong with your card authorization. Please try again.', 'nofrixion-for-woocommerce');
+		}
+
+	} catch (\Throwable $e) {
+		// wp_die()
+		Logger::debug('Update payment method callback: Error fetching payment request data.');
+		Logger::debug('Exception: ' . $e->getMessage());
+		$errors[] = __('Something went wrong while contacting payment provider. Please try again.', 'nofrixion-for-woocommerce');
+	}
+	// Todo: show notice on the redirect page $messages / $errors
+	wp_redirect($redirectUrl);
 });
 
 
