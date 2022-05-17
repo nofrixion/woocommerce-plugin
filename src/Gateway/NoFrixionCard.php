@@ -40,6 +40,7 @@ class NoFrixionCard extends NoFrixionGateway {
 			'subscription_payment_method_change_customer',
 			'subscription_payment_method_change_admin',
 			'multiple_subscriptions',
+			'tokenization'
 		];
 	}
 
@@ -71,7 +72,17 @@ class NoFrixionCard extends NoFrixionGateway {
 						</td>
 					</tr>
 				</table>
-		</form>';
+		</form><div style="height: 10px;"></div>';
+
+		// Show save to account and saved payment methods.
+		if (is_user_logged_in() && !is_add_payment_method_page() && !$this->isChangingPaymentMethodForSubscription()) {
+			$this->save_payment_method_checkbox();
+			$this->saved_payment_methods();
+		}
+	}
+
+	public function add_payment_method() {
+
 	}
 
 	public function getTitle(): string {

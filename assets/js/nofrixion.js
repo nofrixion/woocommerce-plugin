@@ -109,6 +109,12 @@ var processPaymentRequestOrder = function () {
 			console.log('Received response when processing PaymentRequestOrder: ');
 			console.log(response);
 			// Todo handle returned WC errors.
+
+			// Payment done by token, redirect directly to order received page.
+			if (response.orderPaidWithToken === true) {
+				window.location = response.orderReceivedPage;
+			}
+
 			if (response.paymentRequestId) {
 				processedOrder = true;
 			}
@@ -256,6 +262,52 @@ var NoFrixionStorage = {
 }
 
 /**
+ * Handle visibility of payment form depending on stored tokens.
+ */
+var handleStoredTokens = function () {
+	// Check if there are any stored tokens, handle initial page load.
+	let $savedPaymentMethods = jQuery('ul.woocommerce-SavedPaymentMethods input[type="radio"]');
+	if ($savedPaymentMethods.length > 0) {
+		// Initial check.
+		if (jQuery('li.woocommerce-SavedPaymentMethods-token').length > 0) {
+			// At least one payment token available, if selected hide the CC form.
+			// If one is selected by default, hide the CC form.
+			if (jQuery('li.woocommerce-SavedPaymentMethods-token input[type="radio"]:checked').length > 0) {
+				togglePaymentForm(true);
+			}
+		} else {
+			// Saved payment methods present but no tokens yet. CC form shown.
+		}
+
+		// Capture radio changes.
+		$savedPaymentMethods.change(function () {
+			if (jQuery(this).val() === 'new') {
+				togglePaymentForm(false);
+			} else {
+				togglePaymentForm(true);
+			}
+		});
+	}
+}
+
+/**
+ * Hide or show the CC payment form.
+ *
+ * @param hide
+ */
+var togglePaymentForm = function (hide = true) {
+	let $paymentForm = jQuery('#nf-cardPaymentForm');
+	let $saveTokenCheckbox = jQuery('.woocommerce-SavedPaymentMethods-saveNew');
+	if (hide) {
+		$paymentForm.hide();
+		$saveTokenCheckbox.hide();
+	} else {
+		$paymentForm.show();
+		$saveTokenCheckbox.show();
+	}
+}
+
+/**
  * Main entry point.
  */
 jQuery(function ($) {
@@ -263,9 +315,11 @@ jQuery(function ($) {
 	$('body').on('init_checkout updated_checkout payment_method_selected', function (event) {
 		console.log('Fired event: ' + event.type);
 		noFrixionSelected();
+		handleStoredTokens();
 	});
 	// On payment method change page, initialize NoFrixion.
 	if ( 'yes' === NoFrixionWP.is_change_payment_page || 'yes' === NoFrixionWP.is_pay_for_order_page ) {
 		noFrixionChangePaymentMethod();
+		handleStoredTokens();
 	}
 });

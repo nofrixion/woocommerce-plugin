@@ -16,6 +16,7 @@
 use NoFrixion\WC\Client\PaymentRequest;
 use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
+use NoFrixion\WC\Helper\TokenManager;
 
 defined( 'ABSPATH' ) || exit();
 
@@ -214,7 +215,8 @@ class NoFrixionWCPlugin {
 
 		wp_send_json_error();
 	}
-		/**
+
+	/**
 	 * Handles the AJAX callback from the Payment Request on the checkout page.
 	 */
 	public function processAjaxPaymentRequestOrder() {
@@ -245,6 +247,64 @@ class NoFrixionWCPlugin {
 		} catch (\Throwable $e) {
 			Logger::debug('Error processing payment request ajax callback: ' . $e->getMessage());
 		}
+	}
+
+	/**
+	 * Handles the AJAX callback to only authorize card (on my-account payment methods page).
+	 */
+	public function processAjaxPaymentRequestAuthorizeCard() {
+
+		Logger::debug('Entering processAjaxPaymentRequestAuthorizeCard()');
+
+		$nonce = $_POST['apiNonce'];
+		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
+			wp_die( 'Unauthorized!', '', [ 'response' => 401 ] );
+		}
+
+		// todo:
+		// Create PR with dummy callback
+		// Update PR with callback redirect url and PR id
+		// Store on user meta as $authorizationReqId
+		// callback url:
+		// search by user with PRid
+		// check current user matches
+		// check status of authorization (refactor?)
+		// add new token to user
+		/*
+		$callbackUrl = site_url() . '/'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'/';
+		$callbackUrl .= '?authReqId=' . $orderId;
+
+		try {
+			$apiHelper = new ApiHelper();
+			$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+			$result = $client->createPaymentRequest(
+				site_url(),
+				$callbackUrl,
+				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				null,
+				['card'],
+				null,
+				true,
+				get_current_user_id(),
+				true
+			);
+
+			Logger::debug('Result creating PR for payment method change: ' . print_r($result, true));
+
+			update_post_meta($orderId, 'NoFrixion_pmupdate_PrId', $result['id']);
+			update_post_meta($orderId, 'NoFrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
+
+			wp_send_json_success(
+				[
+					'paymentRequestId' => $result['id'] ?? null,
+				]
+			);
+		} catch (\Throwable $e) {
+			Logger::debug('Error creating payment request: ' . $e->getMessage());
+		}
+
+		wp_send_json_error();
+		*/
 	}
 
 	public function orderHasSubscription($order) {
@@ -300,15 +360,19 @@ class NoFrixionWCPlugin {
 			return;
 		}
 
+		Logger::debug('Entering orderStatusThankYouPage:');
+
 		$currentOrderStatus = $order->get_status();
 		$paymentRequestID = $order->get_meta('NoFrixion_id');
 		$isSubscription = (bool) $order->get_meta('NoFrixion_isSubscription');
+		$saveToken = (bool) $order->get_meta('NoFrixion_saveTokenSelected');
 
+		// Only process payment status if not already done.
 		if (
 			!in_array($currentOrderStatus, ['processing', 'completed', 'failed']) &&
 			$paymentRequestID
 		) {
-			// Check PaymentRequestStatus.
+			// Check PaymentRequest.
 			try {
 				$apiHelper = new ApiHelper();
 
@@ -316,9 +380,10 @@ class NoFrixionWCPlugin {
 				$paymentRequest = $client->getPaymentRequest($paymentRequestID);
 				$payment = $paymentRequest['result']['payments'][0] ?? null;
 				$tokenizedCard = $paymentRequest['tokenisedCards'][0] ?? null;
+				$paymentStatus = $paymentRequest['result']['result'] ?? null;
 
-				if (isset($paymentRequest['result']['result'])) {
-					switch ( $paymentRequest['result']['result'] ) {
+				if (isset($paymentStatus)) {
+					switch ( $paymentStatus ) {
 						case "FullyPaid":
 							$order->payment_complete();
 							$order->save();
@@ -338,7 +403,14 @@ class NoFrixionWCPlugin {
 					if (is_null($payment)) {
 						Logger::debug('Order received page: paymentRequest does not have any payments. ID: ' . $paymentRequestID);
 					} else {
-						// Store the card token and authorization for future charges.
+
+						// Create a cc token for future charges.
+						Logger::debug('Check if we need to store a token.');
+						if ($tokenizedCard && ($isSubscription || $saveToken)) {
+							TokenManager::addToken($tokenizedCard, get_current_user_id());
+						}
+
+						// For subscriptions, also store the tokenisedCardId on the order for recurring charges.
 						if ($isSubscription) {
 							$order->update_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
 							$order->update_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
@@ -500,6 +572,9 @@ add_action( 'template_redirect', function() {
 			$parentOrder->save();
 			$parentOrder->add_order_note( sprintf(__('Updated card token after payment method change by order/subscription id %u.', 'nofrixion-for-woocommerce'), $subscriptionId));
 			Logger::debug('Updated order and parent order with new tokenised card details.');
+
+			// Store CC data as token.
+			TokenManager::addToken($tokenizedCard, get_current_user_id());
 
 			WC_Subscriptions_Change_Payment_Gateway::update_payment_method( $subscription, $subscription->get_payment_method());
 
