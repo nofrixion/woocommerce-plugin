@@ -78,6 +78,41 @@ var createPaymentRequestChangePM = function () {
 	return false;
 };
 
+/**
+ * Trigger ajax request to create only payment request for authorize card.
+ */
+var createPaymentRequestAuthorizeCard = function () {
+
+	if (window.nfWCpaymentRequestID === undefined) {
+
+		console.log('Creating payment request (authorize card).');
+
+		let data = {
+			'action': 'nofrixion_payment_request_authorize_card',
+			'apiNonce': NoFrixionWP.apiNonce,
+			'gateway': jQuery('input[name="payment_method"]:checked').val()
+		};
+
+		jQuery.post(NoFrixionWP.url, data, function (response) {
+			if (response.data.paymentRequestId) {
+				try {
+					window.nfWCpaymentRequestID = response.data.paymentRequestId;
+					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
+					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
+						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
+					window.nfPayElement.load();
+					console.log(response);
+				} catch (ex) {
+					console.log('Error occurred initializing the payframe: ' + ex);
+				}
+			}
+		}).fail(function () {
+			alert('Error processing your request xx. Please contact support or try again.')
+		});
+	}
+
+	return false;
+};
 
 /**
  * Trigger ajax request to create order and process checkout.
@@ -155,6 +190,16 @@ var submitPayFrameChangePM = function (e) {
 };
 
 /**
+ * Trigger payframe (authorize card) button submit.
+ */
+var submitPayFrameAuthorizeCard = function (e) {
+	e.preventDefault();
+	console.log('Triggered submit payframe (authorize card)');
+	nfpayByCard();
+	return false;
+};
+
+/**
  * Makes sure to trigger on payment method changes and overriding the default button submit handler.
  */
 var noFrixionSelected = function () {
@@ -181,6 +226,22 @@ var noFrixionChangePaymentMethod = function () {
 	} else {
 		// Undo bind custom event handler.
 		order_review_form.off('submit', submitPayFrameChangePM);
+	}
+}
+
+/**
+ * Makes sure to trigger add payment method page and overriding the default button submit handler.
+ */
+var noFrixionAuthorizeCard = function () {
+	console.log('Authorize Card.');
+	var add_pm_form = jQuery('form#add_payment_method');
+	if (jQuery('input[name="payment_method"]:checked', add_pm_form).val() === 'nofrixion_card') {
+		createPaymentRequestAuthorizeCard();
+		// Bind our custom event handler to checkout button.
+		add_pm_form.on('submit', submitPayFrameAuthorizeCard);
+	} else {
+		// Undo bind custom event handler.
+		add_pm_form.off('submit', submitPayFrameAuthorizeCard);
 	}
 }
 
@@ -321,5 +382,8 @@ jQuery(function ($) {
 	if ( 'yes' === NoFrixionWP.is_change_payment_page || 'yes' === NoFrixionWP.is_pay_for_order_page ) {
 		noFrixionChangePaymentMethod();
 		handleStoredTokens();
+	}
+	if ( 'yes' === NoFrixionWP.is_add_payment_method_page) {
+		noFrixionAuthorizeCard();
 	}
 });

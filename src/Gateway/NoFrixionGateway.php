@@ -252,7 +252,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	 */
 	public function addScripts($hook_suffix) {
 		// We only need this on checkout and pay-for-order page.
-		if ( ! is_checkout() && ! isset( $_GET['pay_for_order'] ) ) {
+		if ( ! is_checkout() && ! isset( $_GET['pay_for_order'] ) && ! is_add_payment_method_page() ) {
 			return;
 		}
 

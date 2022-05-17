@@ -61,7 +61,8 @@ class PaymentRequest extends AbstractClient
 		?array $paymentMethodTypes = null,
 		?string $orderId = null,
 		?bool $createToken = false,
-		?string $customerId = null
+		?string $customerId = null,
+		?bool $cardAuthorizeOnly = false
 	): array {
 		$url = $this->getApiUrl() . 'paymentrequests/' . urlencode($paymentRequestId);
 		$headers = $this->getRequestHeaders();
@@ -75,7 +76,8 @@ class PaymentRequest extends AbstractClient
 			'PaymentMethodTypes' => implode(',', $paymentMethodTypes),
 			'OrderID' => $orderId,
 			'CardCreateToken' => $createToken ? 'true' : 'false',
-			'CustomerID' => $customerId ?? ''
+			'CustomerID' => $customerId ?? '',
+			'CardAuthorizeOnly' => $cardAuthorizeOnly ? 'true' : 'false',
 		]);
 
 		Logger::debug('Data sent on updatePaymentRequest: ' . $body);
