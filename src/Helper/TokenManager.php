@@ -23,6 +23,8 @@ class TokenManager {
 		$token->set_last4(substr($tokenizedCard['maskedCardNumber'], -4));
 		$token->set_expiry_month($tokenizedCard['expiryMonth']);
 		$token->set_expiry_year($tokenizedCard['expiryYear']);
+		// todo: Change to the actual key returned by the api.
+		//$token->set_card_type($tokenizedCard['cardType']);
 		$token->set_user_id($userId);
 		$token->set_default($setDefault);
 		if (!$token->save()) {

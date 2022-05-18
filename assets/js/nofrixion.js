@@ -31,9 +31,16 @@ var createPaymentRequest = function () {
 				} catch (ex) {
 					console.log('Error occurred initializing the payframe: ' + ex);
 				}
+			} else {
+				// Show errors.
+				if ( response.messages ) {
+					submitError( response.messages );
+				} else {
+					submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' );
+				}
 			}
 		}).fail(function () {
-			alert('Error processing your request. Please contact support or try again.')
+			submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' );
 		});
 	}
 
@@ -69,9 +76,16 @@ var createPaymentRequestChangePM = function () {
 				} catch (ex) {
 					console.log('Error occurred initializing the payframe: ' + ex);
 				}
+			} else {
+				// Show errors.
+				if ( response.messages ) {
+					submitError( response.messages );
+				} else {
+					submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' ); // eslint-disable-line max-len
+				}
 			}
 		}).fail(function () {
-			alert('Error processing your request xx. Please contact support or try again.')
+			submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' );
 		});
 	}
 
@@ -105,9 +119,16 @@ var createPaymentRequestAuthorizeCard = function () {
 				} catch (ex) {
 					console.log('Error occurred initializing the payframe: ' + ex);
 				}
+			} else {
+				// Show errors.
+				if ( response.messages ) {
+					submitError( response.messages );
+				} else {
+					submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' ); // eslint-disable-line max-len
+				}
 			}
 		}).fail(function () {
-			alert('Error processing your request xx. Please contact support or try again.')
+			submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' );
 		});
 	}
 
@@ -152,9 +173,16 @@ var processPaymentRequestOrder = function () {
 
 			if (response.paymentRequestId) {
 				processedOrder = true;
+			} else {
+				// Show errors.
+				if ( response.messages ) {
+					submitError( response.messages );
+				} else {
+					submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' ); // eslint-disable-line max-len
+				}
 			}
 		}).fail(function () {
-			alert('Error processing your request. Please contact support or try again.')
+			submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' );
 		});
 
 		// Reenable async.
@@ -246,44 +274,31 @@ var noFrixionAuthorizeCard = function () {
 }
 
 /**
- * Validate form fields.
+ * Show errors, mostly copied from WC checkout.js
+ *
+ * @param error_message
  */
-var noFrixionValidateFields = function () {
-
-	console.log('Validating form fields.');
-
-	let hasErrors = false;
-
-	// Prepare div container structure.
+var submitError = function( error_message ) {
 	let $checkoutForm = jQuery('form.checkout');
+	jQuery('.woocommerce-NoticeGroup-checkout, .woocommerce-error, .woocommerce-message').remove();
+	$checkoutForm.prepend( '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">' + error_message + '</div>' ); // eslint-disable-line max-len
+	$checkoutForm.removeClass( 'processing' ).unblock();
+	$checkoutForm.find( '.input-text, select, input:checkbox' ).trigger( 'validate' ).trigger( 'blur' );
+	scrollToNotices();
+	jQuery(document.body).trigger('checkout_error' , [ error_message ]);
+};
 
-	let alert = `<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">
-					<ul class="woocommerce-error" role="alert">`;
+/**
+ * Scroll to errors on top of form, copied from WC checkout.js.
+ */
+var scrollToNotices = function() {
+	var scrollElement = jQuery( '.woocommerce-NoticeGroup-updateOrderReview, .woocommerce-NoticeGroup-checkout' );
 
-	jQuery.each($checkoutForm.serializeArray(), function(item, field) {
-		let $fieldRow = jQuery('#' + field.name + '_field');
-		if ($fieldRow.hasClass('validate-required')) {
-
-			if (field.value === '') {
-				console.log(field.name + ' is required');
-
-				hasErrors = true;
-				alert += `<li><strong>${$fieldRow.find('label').text()}</strong> ${NoFrixionWP.isRequiredField}</li>`;
-			}
-		}
-	});
-
-	// Close ul and div.
-	alert += '</ul></div>';
-
-	// Add or remove errors from page.
-	if (hasErrors) {
-		$checkoutForm.prepend(alert);
-	} else {
-		jQuery('.woocommerce-NoticeGroup').remove();
+	if ( ! scrollElement.length ) {
+		scrollElement = $( 'form.checkout' );
 	}
 
-	return !hasErrors;
+	jQuery.scroll_to_notices( scrollElement );
 };
 
 /**
