@@ -32,7 +32,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		// Admin facing title and description.
 		$this->method_title       = 'NoFrixion';
-		$this->method_description = __('NoFrixion gateway supporting all available credit card and SEPA payments.', 'nofrixion-for-woocommerce');
+		$this->method_description = __('NoFrixion payments supporting cards and open banking.', 'nofrixion-for-woocommerce');
 
 		// Debugging & informational settings.
 		$this->debug_php_version    = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
