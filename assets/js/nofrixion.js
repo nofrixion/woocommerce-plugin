@@ -213,6 +213,8 @@ var submitPayFrame = function (e) {
 var submitPayFrameChangePM = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe (change pm)');
+	// Make sure the UI is not blocked.
+	jQuery(this).unblock();
 	nfpayByCard();
 	return false;
 };
@@ -223,6 +225,8 @@ var submitPayFrameChangePM = function (e) {
 var submitPayFrameAuthorizeCard = function (e) {
 	e.preventDefault();
 	console.log('Triggered submit payframe (authorize card)');
+	// Make sure the UI is not blocked.
+	jQuery(this).unblock();
 	nfpayByCard();
 	return false;
 };
