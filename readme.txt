@@ -1,5 +1,5 @@
 === NoFrixion for WooCommerce ===
-Contributors: ndeet
+Contributors: nofrixion
 Tags: payment gateway, WooCommerce, NoFrixion
 Requires at least: 5.2
 Tested up to: 5.9
