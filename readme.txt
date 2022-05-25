@@ -12,7 +12,7 @@ Card and Open Banking payment processing for WooCommerce
 
 == Description ==
 
-The NoFrixion for WooCommerce plugin provides a convenient way to access the NoFrixion payment gateway from WooCommerce.
+The NoFrixion for WooCommerce plugin provides a convenient way to access the NoFrixion payment gateway.
 
 Supported payment options are:
 
@@ -25,9 +25,7 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 
 == Frequently Asked Questions ==
 
-
-== Screenshots ==
-
+Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
 = 1.0.3 :: 2022-05-25 =
