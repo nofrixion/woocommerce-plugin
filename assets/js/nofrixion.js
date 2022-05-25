@@ -22,9 +22,9 @@ var createPaymentRequest = function () {
 					//NoFrixionStorage.setItem('paymentRequestID', response.data.paymentRequestId, 90);
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
 					//window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-cardNumber',
-					//	'nf-cardSecurityNumber', 'nf-error', 'https://api-sandbox.nofrixion.com');
+					//	'nf-cardSecurityNumber', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
-						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
+						'nf-securityCode-container', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement.load();
 					jQuery('form[name="checkout"]').append('<input type="hidden" name="payment_request_id" value="' + window.nfWCpaymentRequestID + '" />');
 					console.log(response);
@@ -69,7 +69,7 @@ var createPaymentRequestChangePM = function () {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
 					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
-						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
+						'nf-securityCode-container', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement.load();
 					jQuery('form#order_review').append('<input type="hidden" name="paymentRequestID" value="' + window.nfWCpaymentRequestID + '" />');
 					console.log(response);
@@ -113,7 +113,7 @@ var createPaymentRequestAuthorizeCard = function () {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
 					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
-						'nf-securityCode-container', 'nf-error', 'https://api-sandbox.nofrixion.com');
+						'nf-securityCode-container', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement.load();
 					console.log(response);
 				} catch (ex) {

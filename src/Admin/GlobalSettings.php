@@ -50,7 +50,7 @@ class GlobalSettings extends \WC_Settings_Page {
 				'desc_tip' => _x( 'Choose between live and sandbox mode.', 'global_settings', 'nofrixion-for-woocommerce' ),
 				'options'  => [
 					'sandbox' => __('Sandbox (for testing)', 'nofrixion-for-woocommerce'),
-					'live'    => __('Live', 'nofrixion-for-woocommerce'),
+					'production'    => __('Production', 'nofrixion-for-woocommerce'),
 				],
 				'default'  => 'sandbox',
 				'id'       => 'nofrixion_mode'

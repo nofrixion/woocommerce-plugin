@@ -7,7 +7,7 @@ namespace NoFrixion\WC\Helper;
 class ApiHelper {
 	public const API_URL = [
 		'sandbox' => 'https://api-sandbox.nofrixion.com',
-		'live'    => 'https://api.nofrixion.com'
+		'production' => 'https://api.nofrixion.com'
 	];
 
 	public string $mode;

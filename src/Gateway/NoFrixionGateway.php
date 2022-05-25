@@ -261,23 +261,24 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			return;
 		}
 
-		// let's suppose it is our payment processor JavaScript that allows to obtain a token
-		wp_enqueue_script( 'nofrixion_js', 'https://api-sandbox.nofrixion.com/js/payelement.js' );
+		// Load NoFrixion payelement.
+		wp_enqueue_script( 'nofrixion_js', $this->apiHelper->url . '/js/payelement.js' );
 
-		// and this is our custom JS in your plugin directory that works with token.js
+		// Register custom JS.
 		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );
 
-		// in most payment processors you have to use PUBLIC KEY to obtain a token
+		// Pass object NoFrixionWP to be available on the frontend in nofrixion.js.
 		wp_localize_script( 'woocommerce_nofrixion', 'NoFrixionWP', [
 			'url' => admin_url( 'admin-ajax.php' ),
+			'apiUrl' => $this->apiHelper->url,
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
-			'nfApiUrl' => $this->get_option('url', null),
 			'is_change_payment_page' => isset( $_GET['change_payment_method'] ) ? 'yes' : 'no',
 			'is_pay_for_order_page' => is_wc_endpoint_url( 'order-pay' ) ? 'yes' : 'no',
 			'is_add_payment_method_page' => is_add_payment_method_page() ? 'yes' : 'no',
 		] );
 
+		// Add the registered nofrixion script to frontend.
 		wp_enqueue_script( 'woocommerce_nofrixion' );
 	}
 
