@@ -2,12 +2,12 @@
 /**
  * Plugin Name:     NoFrixion for WooCommerce
  * Plugin URI:      https://wordpress.org/plugins/nofrixion-for-woocommerce/
- * Description:
+ * Description:     Adds a new payment method to WooCommerce that connects to the NoFrixion MoneyMoov API.
  * Author:          NoFrixion
  * Author URI:      https://nofrixion.com
  * Text Domain:     nofrixion-for-woocommerce
  * Domain Path:     /languages
- * Version:         1.0.4
+ * Version:         1.0.5
  * Requires PHP:    7.4
  * Tested up to:    5.9
  * Requires at least: 5.2
