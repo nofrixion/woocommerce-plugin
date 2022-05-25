@@ -1,319 +1,274 @@
-# Copyright (C) 2022 NoFrixion Server
-# This file is distributed under the same license as the NoFrixion For Woocommerce V2 plugin.
+# Copyright (C) 2022 NoFrixion
+# This file is distributed under the same license as the NoFrixion for WooCommerce package.
 msgid ""
 msgstr ""
-"Project-Id-Version: NoFrixion For Woocommerce V2 0.1.10\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/nofrixion-for-woocommerce\n"
+"Project-Id-Version: NoFrixion for WooCommerce 0.8.2\n"
+"Report-Msgid-Bugs-To: "
+"https://wordpress.org/support/plugin/nofrixion-for-woocommerce\n"
+"POT-Creation-Date: 2022-05-25 14:42:39+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2022-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2022-02-15T11:29:35+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.6.0\n"
-"X-Domain: nofrixion-for-woocommerce\n"
+"X-Generator: grunt-wp-i18n 0.5.4\n"
+"X-Poedit-KeywordsList: "
+"__;_e;_x:1,2c;_ex:1,2c;_n:1,2;_nx:1,2,4c;_n_noop:1,2;_nx_noop:1,2,3c;esc_"
+"attr__;esc_html__;esc_attr_e;esc_html_e;esc_attr_x:1,2c;esc_html_x:1,2c;\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Country: United States\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-Bookmarks: \n"
+"X-Textdomain-Support: yes\n"
 
-#. Plugin Name of the plugin
-msgid "NoFrixion For Woocommerce V2"
-msgstr ""
-
-#. Plugin URI of the plugin
-msgid "https://wordpress.org/plugins/nofrixion-for-woocommerce/"
-msgstr ""
-
-#. Description of the plugin
-msgid "NoFrixion Server is a free and open-source bitcoin payment processor which allows you to receive payments in Bitcoin and altcoins directly, with no fees, transaction cost or a middleman."
-msgstr ""
-
-#. Author of the plugin
-msgid "NoFrixion Server"
-msgstr ""
-
-#. Author URI of the plugin
-msgid "https://btcpayserver.org"
-msgstr ""
-
-#: nofrixion-for-woocommerce.php:95
+#: nofrixion-for-woocommerce.php:96
 msgid "Plugin not configured yet, please %1$sconfigure the plugin here%2$s"
 msgstr ""
 
-#: nofrixion-for-woocommerce.php:113
-msgid "Your PHP version is %s but NoFrixion Greenfield Payment plugin requires version 7.4+."
+#: nofrixion-for-woocommerce.php:114
+msgid ""
+"Your PHP version is %s but NoFrixion Greenfield Payment plugin requires "
+"version 7.4+."
 msgstr ""
 
-#: nofrixion-for-woocommerce.php:119
-msgid "WooCommerce seems to be not installed. Make sure you do before you activate NoFrixion Payment Gateway."
+#: nofrixion-for-woocommerce.php:120
+msgid ""
+"WooCommerce seems to be not installed. Make sure you do before you activate "
+"NoFrixion Payment Gateway."
 msgstr ""
 
-#: nofrixion-for-woocommerce.php:130
-msgid "Seems you have the old NoFrixion for WooCommerce plugin installed. While it should work it is strongly recommended to not run both versions but rely on the maintained version (NoFrixion Greenfield for WooCommerce)."
+#: nofrixion-for-woocommerce.php:598
+msgid ""
+"Received card token for future charges of a subscription, updated parent "
+"order."
 msgstr ""
 
-#: nofrixion-for-woocommerce.php:274
-msgid "Successfully received api key and store id from NoFrixion Server API."
+#: nofrixion-for-woocommerce.php:603
+msgid "Updated card token after payment method change by order/subscription id %u."
 msgstr ""
 
-#: nofrixion-for-woocommerce.php:277
-msgid "Please make sure you only select one store on the NoFrixion API authorization page."
+#: nofrixion-for-woocommerce.php:611 nofrixion-for-woocommerce.php:663
+msgid "Thank you. Your card details have been updated."
 msgstr ""
 
-#: nofrixion-for-woocommerce.php:282
-msgid "Error processing the data from NoFrixion. Please try again."
+#: nofrixion-for-woocommerce.php:613
+msgid "Card authorization failed on payment method change."
 msgstr ""
 
-#: generated/NoFrixion_GF_BTC.php:25
-#: generated/NoFrixion_GF_BTC_LightningNetwork.php:26
-msgid "Token type"
+#: nofrixion-for-woocommerce.php:614 nofrixion-for-woocommerce.php:665
+msgid "Something went wrong with your card authorization. Please try again."
 msgstr ""
 
-#: generated/NoFrixion_GF_BTC.php:32
-#: generated/NoFrixion_GF_BTC_LightningNetwork.php:33
-msgid "Tokens of type promotion will not have a FIAT (USD, EUR, ..) exchange rate but counted as 1 per item quantity. See <a target=\"_blank\" href=\"https://docs.btcpayserver.org/FAQ/Integrations/#token-types\">here</a> for more details."
+#: nofrixion-for-woocommerce.php:621 nofrixion-for-woocommerce.php:671
+msgid "Something went wrong while contacting payment provider. Please try again."
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:24
+#: src/Admin/GlobalSettings.php:18
 msgid "NoFrixion Settings"
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:58
+#: src/Admin/GlobalSettings.php:52
+msgid "Sandbox (for testing)"
+msgstr ""
+
+#: src/Admin/GlobalSettings.php:53
+msgid "Production"
+msgstr ""
+
+#: src/Admin/GlobalSettings.php:66
+msgid "Debug Log"
+msgstr ""
+
+#: src/Admin/GlobalSettings.php:94
+msgid ""
+"Error fetching data for this token from server. Please check if the "
+"merchant token is valid. Error: %s"
+msgstr ""
+
+#: src/Gateway/NoFrixionCard.php:27
+msgid "NoFrixion gateway supporting all available credit card payments."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:23
+msgid "Place order"
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:35
+msgid "NoFrixion payments supporting cards and open banking."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:74
+msgid "Enabled/Disabled"
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:76
+msgid "Enable this payment gateway."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:82
+msgid "Customer Text"
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:84
+msgid ""
+"Controls the name of this payment method as displayed to the customer "
+"during checkout."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:89
+msgid "Customer Message"
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:91
+msgid "Message to explain how the customer will be paying for the purchase."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:105
+msgid "Can't process order. No merchant token configured, aborting."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:275
+msgid "is a required field."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:358
+msgid "Invoice payment received after invoice was already expired."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:362
+msgid "Invoice (partial) payment received. Waiting for full payment."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:372
+msgid "Invoice payment received fully with overpayment, waiting for settlement."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:374
+msgid "Invoice payment received fully, waiting for settlement."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:380
+msgid "Invoice manually marked invalid."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:382
+msgid "Invoice became invalid."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:388
+msgid "Invoice expired but was paid partially, please check."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:391
+msgid "Invoice expired."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:397
+msgid "Invoice payment settled but was overpaid."
+msgstr ""
+
+#: src/Gateway/NoFrixionGateway.php:400
+msgid "Invoice payment settled."
+msgstr ""
+
+#: src/Gateway/NoFrixionPisp.php:27
+msgid "NoFrixion gateway supporting all available PISP banks."
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "NoFrixion for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://wordpress.org/plugins/nofrixion-for-woocommerce/"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "NoFrixion"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://nofrixion.com"
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:409
+msgctxt "nofrixion-for-woocommerce"
+msgid "Payment failed, please make a new order or get in contact with us."
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:435
+msgctxt "nofrixion-for-woocommerce"
+msgid "Received card token for future charges of a subscription."
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:454
+msgctxt "nofrixion-for-woocommerce"
+msgid "Waiting for payment settlement"
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:457
+msgctxt "nofrixion-for-woocommerce"
+msgid "Payment completed, processing your order."
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:460
+msgctxt "nofrixion-for-woocommerce"
+msgid "Payment completed"
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:463
+msgctxt "nofrixion-for-woocommerce"
+msgid "Payment failed"
+msgstr ""
+
+#: nofrixion-for-woocommerce.php:470
+msgctxt "nofrixion-for-woocommerce"
+msgid "Payment Status"
+msgstr ""
+
+#: src/Admin/GlobalSettings.php:38
 msgctxt "global_settings"
 msgid "NoFrixion Server Payments Settings"
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:64
+#: src/Admin/GlobalSettings.php:44
 msgctxt "global_settings"
-msgid "This plugin version is %s and your PHP version is %s. If you need assistance, please come on our chat <a href=\"https://chat.btcpayserver.org\" target=\"_blank\">https://chat.btcpayserver.org</a>. Thank you for using NoFrixion!"
+msgid ""
+"This plugin version is %s and your PHP version is %s. If you need "
+"assistance, please contact us at <a href=\"https://www.nofrixion.com\" "
+"target=\"_blank\">nofrixion.com</a>. Thank you for using NoFrixion!"
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:68
+#: src/Admin/GlobalSettings.php:48
 msgctxt "global_settings"
-msgid "NoFrixion Server URL"
+msgid "Mode"
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:74
+#: src/Admin/GlobalSettings.php:50
 msgctxt "global_settings"
-msgid "Url to your NoFrixion Server instance."
+msgid "Choose between live and sandbox mode."
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:75
+#: src/Admin/GlobalSettings.php:59
 msgctxt "global_settings"
-msgid "e.g. https://btcpayserver.example.com"
+msgid "NoFrixion merchant token"
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:80
+#: src/Admin/GlobalSettings.php:61
 msgctxt "global_settings"
-msgid "NoFrixion API Key"
+msgid ""
+"Your NoFrixion merchant token. Get yours at our merchant portal on <a "
+"href=\"https://www.nofrixion.com\" class=\"nofrixion-link\" "
+"target=\"_blank\">nofrixion.com</a>"
 msgstr ""
 
-#: src/Admin/GlobalSettings.php:82
-msgctxt "global_settings"
-msgid "Your NoFrixion API Key. If you do not have any yet <a href=\"#\" class=\"btcpay-api-key-link\" target=\"_blank\">click here to generate API keys.</a>"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:87
-msgctxt "global_settings"
-msgid "Store ID"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:89
-msgctxt "global_settings"
-msgid "Your NoFrixion Store ID. You can find it on the store settings page on your NoFrixion Server."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:97
-msgctxt "global_settings"
-msgid "You will be redirected to NoFrixion to complete your purchase."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:104
-msgctxt "global_settings"
-msgid "An invoice becomes settled after the payment has this many confirmations..."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:106
-msgctxt "global_settings"
-msgid "Keep NoFrixion Server store level configuration"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:107
-msgctxt "global_settings"
-msgid "0 confirmation on-chain"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:108
-msgctxt "global_settings"
-msgid "1 confirmation on-chain"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:109
-msgctxt "global_settings"
-msgid "2 confirmations on-chain"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:110
-msgctxt "global_settings"
-msgid "6 confirmations on-chain"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:121
-msgid "Separate Payment Gateways"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:124
-msgctxt "global_settings"
-msgid "Make all supported and enabled payment methods available as their own payment gateway. This opens new possibilities like discounts for specific payment methods. See our <a href=\"todo-input-link-here\" target=\"_blank\">full guide here</a>"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:128
-msgid "Send customer data to NoFrixion"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:131
-msgctxt "global_settings"
-msgid "If you want customer email, address, etc. sent to NoFrixion Server enable this option. By default for privacy and GDPR reasons this is disabled."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:135
-msgid "Debug Log"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:138
+#: src/Admin/GlobalSettings.php:69
 msgctxt "global_settings"
 msgid "Enable logging <a href=\"%s\" class=\"button\">View Logs</a>"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:192
-msgid "The provided API key scope is valid for multiple stores, please make sure to create one for a single store."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:200
-msgid "The provided API key does not match the required permissions. Please make sure the following permissions are are given: %s"
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:211
-msgid "Reusing existing webhook."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:217
-msgid "Successfully registered a new webhook on NoFrixion Server."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:221
-msgid "Could not register a new webhook on the store."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:231
-msgid "No wallet configured on your NoFrixion Server store settings. Make sure to add at least one otherwise this plugin will not work."
-msgstr ""
-
-#: src/Admin/GlobalSettings.php:241
-msgid "Error fetching data for this API key from server. Please check if the key is valid. Error: %s"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:25
-#: src/Gateway/DefaultGateway.php:19
-msgid "Proceed to NoFrixion"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:60
-msgid "Use this image"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:61
-msgid "Insert image"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:67
-#: src/Helper/SettingsHelper.php:12
-msgid "Title"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:69
-#: src/Helper/SettingsHelper.php:14
-msgid "Controls the name of this payment method as displayed to the customer during checkout."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:74
-#: src/Helper/SettingsHelper.php:19
-msgid "Customer Message"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:76
-#: src/Helper/SettingsHelper.php:21
-msgid "Message to explain how the customer will be paying for the purchase."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:93
-msgid "Can't process order. Please contact us if the problem persists."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:160
-msgid "Gateway Icon:"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:165
-msgid "Upload or select icon"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:171
-msgid "Remove image"
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:268
-msgid "Invoice payment received after invoice was already expired."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:272
-msgid "Invoice (partial) payment received. Waiting for full payment."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:282
-msgid "Invoice payment received fully with overpayment, waiting for settlement."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:284
-msgid "Invoice payment received fully, waiting for settlement."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:290
-msgid "Invoice manually marked invalid."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:292
-msgid "Invoice became invalid."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:298
-msgid "Invoice expired but was paid partially, please check."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:301
-msgid "Invoice expired."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:307
-msgid "Invoice payment settled but was overpaid."
-msgstr ""
-
-#: src/Gateway/AbstractGateway.php:310
-msgid "Invoice payment settled."
-msgstr ""
-
-#: src/Gateway/DefaultGateway.php:22
-msgid "NoFrixion default gateway supporting all available tokens on your NoFrixion store."
-msgstr ""
-
-#: src/Gateway/DefaultGateway.php:49
-msgid "Enforce payment tokens"
-msgstr ""
-
-#: src/Gateway/DefaultGateway.php:51
-msgid "Enforce payment methods \"payment\". This way tokens of type promotion will be excluded for this gateway."
-msgstr ""
-
-#: src/Gateway/DefaultGateway.php:54
-msgid "This will override the default btcpay payment method (defaults to all supported by NoFrixion Server) and enforce to tokens of type \"payment\". This is useful if you have enabled separate payment gateways and want full control on what is available on NoFrixion Server payment page."
 msgstr ""
 
 #: src/Helper/OrderStates.php:34
@@ -358,9 +313,9 @@ msgstr ""
 
 #: src/Helper/OrderStates.php:90
 msgctxt "global_settings"
-msgid "By keeping default behavior for the \"Settled\" status you make sure that WooCommerce handles orders of virtual and downloadable products only properly and set those orders to \"complete\" instead of \"processing\" like for orders containing physical products."
-msgstr ""
-
-#: src/Helper/SettingsHelper.php:15
-msgid "NoFrixion (Bitcoin, Lightning Network, ...)"
+msgid ""
+"By keeping default behavior for the \"Settled\" status you make sure that "
+"WooCommerce handles orders of virtual and downloadable products only "
+"properly and set those orders to \"complete\" instead of \"processing\" "
+"like for orders containing physical products."
 msgstr ""
