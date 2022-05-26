@@ -4,7 +4,7 @@ Tags: payment gateway, WooCommerce, NoFrixion
 Requires at least: 5.2
 Tested up to: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: MIT
 License URI: https://github.com/nofrixion/woocommerce-plugin/blob/master/license.txt
 
