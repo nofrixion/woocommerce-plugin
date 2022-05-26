@@ -20,10 +20,10 @@ jobs:
       #    dev: no
       #    php_version: 7.4
       #    php_extensions: bcmath
-      - name: Build assets and translation files
-        run: |
-          npm install
-          npm run build
+      #- name: Build assets and translation files
+      #  run: |
+      #    npm install
+      #    npm run build
       - name: Create release artifact.
         uses: thedoctor0/zip-release@master
         with:
