@@ -183,8 +183,8 @@ class NoFrixionWCPlugin {
 		$orderId = wc_sanitize_order_id($_POST['orderId']);
 
 
-		$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'/';
-		$callbackUrl .= '?orderId=' . $orderId;
+		$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'&';
+		$callbackUrl .= 'orderId=' . $orderId;
 
 		try {
 			$apiHelper = new ApiHelper();
@@ -278,8 +278,8 @@ class NoFrixionWCPlugin {
 				true
 			);
 
-			$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_AUTH_CARD .'/';
-			$callbackUrl .= '?authReqId=' . $result['id'];
+			$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_AUTH_CARD .'&';
+			$callbackUrl .= 'authReqId=' . $result['id'];
 
 			if ($result) {
 				Logger::debug('Result creating PR for authorize only: ' . print_r($result, true));
