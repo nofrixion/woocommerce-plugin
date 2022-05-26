@@ -29,7 +29,7 @@ jobs:
         with:
           type: 'zip'
           filename: 'nofrixion-for-woocommerce.zip'
-          exclusions: '*.git* /*node_modules/* /*bin/*'
+          exclusions: '*.git* /*node_modules/* /*bin/* *.github* *.wordpress-org* /*tests/* Dockerfile docker-compose* *.lock package-lock.json phpunit.xml.dist'
       - name: Upload artifact to release page.
         uses: ncipollo/release-action@v1
         with:

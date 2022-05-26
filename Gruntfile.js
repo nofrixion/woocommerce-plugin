@@ -38,8 +38,8 @@ module.exports = function( grunt ) {
 	} );
 
 	grunt.loadNpmTasks( 'grunt-wp-i18n' );
-	grunt.registerTask( 'default', [] );
 	grunt.registerTask( 'i18n', ['addtextdomain', 'makepot'] );
+	grunt.registerTask( 'default', ['i18n'] );
 
 	grunt.util.linefeed = '\n';
 

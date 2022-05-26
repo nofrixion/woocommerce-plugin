@@ -329,32 +329,6 @@ class NoFrixionWCPlugin {
 		return wcs_order_contains_subscription($order);
 	}
 
-	public function processAjaxUpdateOrder() {
-		$nonce = $_POST['apiNonce'];
-		if ( ! wp_verify_nonce( $nonce, 'nofrixion-nonce' ) ) {
-			wp_die('Unauthorized!', '', ['response' => 401]);
-		}
-
-		if ( ! defined( 'WOOCOMMERCE_CHECKOUT' ) ) {
-			define( 'WOOCOMMERCE_CHECKOUT', true );
-		}
-
-		// todo: for submission to wp directory we probably need to iterate and sanitize here instead of the called function below
-		$fields = $_POST['fields'];
-
-		$orderId = wc_sanitize_order_id($_POST['orderId']);
-
-		$order = new \WC_Order($orderId);
-		$this->updateOrderFields($order, $fields);
-		$order->save();
-
-		wp_send_json_success(
-			[
-				'orderId' => $orderId
-			]
-		);
-	}
-
 	public function updateOrderFields(\WC_Order &$order, array $fields) {
 		// todo list of specific stuff to update.
 		foreach ($fields as $field) {
