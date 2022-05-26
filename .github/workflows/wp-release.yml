@@ -26,7 +26,7 @@ jobs:
       #    npm run build
       
       - name: Delete bin directory
-        run: rmdir -rf ./bin
+        run: rm -rf ./bin
       
       - name: Create release artifact.
         uses: thedoctor0/zip-release@master
