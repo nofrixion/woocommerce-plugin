@@ -28,7 +28,6 @@ define( 'NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce' );
 class NoFrixionWCPlugin {
 
 	const SESSION_PAYMENTREQUEST_ID = 'nofrixion_payment_request_id';
-
 	const CALLBACK_PM_CHANGE = 'order-payment-method-change';
 	const CALLBACK_AUTH_CARD = 'authorize-card';
 
@@ -184,7 +183,7 @@ class NoFrixionWCPlugin {
 		$orderId = wc_sanitize_order_id($_POST['orderId']);
 
 
-		$callbackUrl = site_url() . '/'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'/';
+		$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'/';
 		$callbackUrl .= '?orderId=' . $orderId;
 
 		try {
@@ -279,7 +278,7 @@ class NoFrixionWCPlugin {
 				true
 			);
 
-			$callbackUrl = site_url() . '/'. NoFrixionWCPlugin::CALLBACK_AUTH_CARD .'/';
+			$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_AUTH_CARD .'/';
 			$callbackUrl .= '?authReqId=' . $result['id'];
 
 			if ($result) {
@@ -505,6 +504,8 @@ class NoFrixionWCPlugin {
 // Start everything up.
 function init_nofrixion() {
 	\NoFrixionWCPlugin::instance();
+
+	nofrixion_ensure_endpoints();
 }
 
 /**
@@ -517,12 +518,6 @@ add_action('init', function() {
 
 	// Adding textdomain and translation support.
 	load_plugin_textdomain('nofrixion-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/');
-
-	// Flush rewrite rules only once after activation.
-	if ( ! get_option('nofrixion_permalinks_flushed') ) {
-		flush_rewrite_rules(false);
-		update_option('nofrixion_permalinks_flushed', 1);
-	}
 });
 
 // To be able to use the endpoint without appended url segments we need to do this.
@@ -675,10 +670,24 @@ add_action( 'template_redirect', function() {
 	wp_redirect($redirectUrl);
 });
 
+/**
+ * Flush rewrite rules to make endpoints work.
+ *
+ * @return void
+ */
+function nofrixion_ensure_endpoints() {
+	$flushed = (int) get_option('nofrixion_permalinks_flushed');
+	if ($flushed < 2 ) {
+		flush_rewrite_rules();
+		$flushed++;
+		update_option('nofrixion_permalinks_flushed', $flushed);
+	}
+}
+
 
 // Installation routine.
 register_activation_hook( __FILE__, function() {
-	update_option('nofrixion_permalinks_flushed', 0);
+	nofrixion_ensure_endpoints();
 });
 
 // Initialize payment gateways and plugin.

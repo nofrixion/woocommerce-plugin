@@ -81,6 +81,9 @@ class GlobalSettings extends \WC_Settings_Page {
 	 */
 	public function save() {
 
+		// Flush rewrite rules.
+		nofrixion_ensure_endpoints();
+
 		Logger::debug( 'Saving GlobalSettings.' );
 
 		$apiUrl = esc_url_raw( $_POST['nofrixion_url'] );
