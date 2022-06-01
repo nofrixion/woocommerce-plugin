@@ -1,6 +1,6 @@
 === NoFrixion for WooCommerce ===
 Contributors: nofrixion
-Tags: payment gateway, WooCommerce, NoFrixion
+Tags: payment, payments, credit card, payment request, payment gateway, payment processing, WooCommerce, NoFrixion
 Requires at least: 5.2
 Tested up to: 6.0
 Requires PHP: 7.4
