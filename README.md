@@ -1,8 +1,5 @@
 # NoFrixion Plugin for WooCommerce
 
-## WARNING: Plugin work in progress, and only operating in sandbox mode for now
-
-
 ## How WooCommerce Payment plugins work
 
 https://woocommerce.com/document/payment-gateway-api/
