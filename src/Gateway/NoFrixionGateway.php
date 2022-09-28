@@ -503,6 +503,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$originUrl,
 				$this->get_return_url($order),
 				$amount,
+				$order->get_billing_email(),
 				$currency,
 				[str_replace('nofrixion_', '', $this->getId())], // pass card, pisp, .. here
 				$orderNumber,
@@ -643,6 +644,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			$paymentRequest = $client->createPaymentRequest(
 				$originUrl,
 				$this->get_return_url($renewalOrder),
+				$order->get_billing_email(),
 				$amountFormatted,
 				$currency,
 				['cardtoken'],

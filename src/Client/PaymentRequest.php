@@ -16,6 +16,7 @@ class PaymentRequest extends AbstractClient
 		string $originUrl,
 		string $callbackUrl,
         PreciseNumber $amount,
+		string $customerEmailAddress,
 	    ?string $currency = null,
 	    ?array $paymentMethodTypes = null,
         ?string $orderId = null,
@@ -37,6 +38,7 @@ class PaymentRequest extends AbstractClient
 	        'CardCreateToken' => $createToken ? 'true' : 'false',
 	        'CustomerID' => $customerId ?? '',
 	        'CardAuthorizeOnly' => $cardAuthorizeOnly ? 'true' : 'false',
+			'CustomerEmailAddress' => $customerEmailAddress
         ]);
 
         Logger::debug('createPaymentRequest() data sent: ' . $body);

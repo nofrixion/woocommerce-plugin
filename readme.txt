@@ -28,6 +28,8 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
+= 1.1.15 :: 2022-09-28 =
+* Set customer email address for card payment.
 = 1.1.14 :: 2022-05-26 =
 * Remove unneeded directories.
 = 1.0.7 :: 2022-05-25 =
