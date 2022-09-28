@@ -46,6 +46,7 @@ class NoFrixionCard extends NoFrixionGateway {
 
 	public function payment_fields() {
 		echo '
+		    
 			<div id="nf-error" role="alert" class="alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
 			<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
 				<table style="padding: 0;">
@@ -72,6 +73,7 @@ class NoFrixionCard extends NoFrixionGateway {
 						</td>
 					</tr>
 				</table>
+				<input type="hidden" id="nf-cardProcessor" value="Checkout" />
 		</form><div style="height: 10px;"></div>';
 
 		// Show save to account and saved payment methods.

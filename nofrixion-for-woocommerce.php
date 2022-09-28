@@ -7,7 +7,7 @@
  * Author URI:      https://nofrixion.com
  * Text Domain:     nofrixion-for-woocommerce
  * Domain Path:     /languages
- * Version:         1.1.15
+ * Version:         1.1.17
  * Requires PHP:    7.4
  * Tested up to:    6.0
  * Requires at least: 5.2
@@ -20,7 +20,7 @@ use NoFrixion\WC\Helper\TokenManager;
 
 defined( 'ABSPATH' ) || exit();
 
-define( 'NOFRIXION_VERSION', '1.1.15' );
+define( 'NOFRIXION_VERSION', '1.1.17' );
 define( 'NOFRIXION_PLUGIN_FILE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'NOFRIXION_PLUGIN_URL', plugin_dir_url(__FILE__ ) );
 define( 'NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce' );
@@ -143,7 +143,8 @@ class NoFrixionWCPlugin {
 				site_url(),
 				site_url() . '/dummyreturnurl',
 				\NoFrixion\WC\Helper\PreciseNumber::parseFloat($total),
-				WC()->cart->get_customer()->get_email(),
+				//WC()->cart->get_customer()->get_email(),
+				"woo@nofrixion.com",
 				null,
 				['card'],
 				null,
