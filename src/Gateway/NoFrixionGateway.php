@@ -262,7 +262,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 
 		// Load NoFrixion payelement.
-		wp_enqueue_script( 'nofrixion_js', $this->apiHelper->url . '/js/payelement.js' );
+		//wp_enqueue_script( 'nofrixion_js', $this->apiHelper->url . '/js/payelement.js' );
+		wp_enqueue_script( 'nofrixion_js', 'https://localhost:44323'. '/nofrixion-dev.js' );
 
 		// Register custom JS.
 		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );

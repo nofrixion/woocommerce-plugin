@@ -31,7 +31,8 @@ class PaymentRequest extends AbstractClient
         $body = http_build_query([
 	        'Amount' => $amount->__toString(),
 	        'Currency' => $currency,
-	        'OriginUrl' => $originUrl,
+	        //'OriginUrl' => $originUrl,
+			'OriginUrl' => 'https://localhost',
 	        'CallbackUrl' => $callbackUrl,
 	        'PaymentMethodTypes' => implode(',', $paymentMethodTypes),
 	        'OrderID' => $orderId,
