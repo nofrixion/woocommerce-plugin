@@ -1,4 +1,4 @@
-FROM wordpress:5.9.3
+FROM wordpress:latest
 
 ENV WOOCOMMERCE_VERSION 6.4.1
 
@@ -18,6 +18,7 @@ RUN ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/local/include/
 RUN docker-php-ext-configure gmp
 RUN docker-php-ext-install gmp
 RUN docker-php-ext-install soap
+RUN pecl install xdebug-3.1.5; docker-php-ext-enable xdebug
 
 # Download WordPress CLI.
 RUN curl -L "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar" > /usr/bin/wp && \
