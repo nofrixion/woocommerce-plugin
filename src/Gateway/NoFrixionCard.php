@@ -77,7 +77,6 @@ class NoFrixionCard extends NoFrixionGateway {
 						</td>
 					</tr>
 				</table>
-				<input type="hidden" id="nf-cardProcessor" value="Checkout" />
 		</form><div style="height: 10px;"></div>';
 
 		// Show save to account and saved payment methods.

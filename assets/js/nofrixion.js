@@ -21,8 +21,6 @@ var createPaymentRequest = function () {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
 					//NoFrixionStorage.setItem('paymentRequestID', response.data.paymentRequestId, 90);
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					//window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-cardNumber',
-					//	'nf-cardSecurityNumber', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-cardNumber',
 						'nf-cardSecurityCode', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement.load();
