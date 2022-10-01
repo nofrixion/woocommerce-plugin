@@ -271,7 +271,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		// Pass object NoFrixionWP to be available on the frontend in nofrixion.js.
 		wp_localize_script( 'woocommerce_nofrixion', 'NoFrixionWP', [
 			'url' => admin_url( 'admin-ajax.php' ),
-			'apiUrl' => $this->apiHelper->url,
+			//'apiUrl' => $this->apiHelper->url,
+			'apiUrl' => 'https://localhost:44323',
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
 			'is_change_payment_page' => isset( $_GET['change_payment_method'] ) ? 'yes' : 'no',

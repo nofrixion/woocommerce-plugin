@@ -56,7 +56,7 @@ class NoFrixionCard extends NoFrixionGateway {
 					<tr style="padding: 0;">
 						<td colspan="2" style="background-color: #f2f2f2; padding:0 0 0 0.62em;">
 							<div id="nf-number-container" style="height:45px;">
-								<input type="text" id="nf-cardNumber" name="cardNumber" placeholder="0000 0000 0000 0000" size="24" maxlength="24" inputmode="numeric" />
+								<input type="text" id="nf-cardNumber" name="nf-cardNumber" placeholder="0000 0000 0000 0000" size="24" maxlength="24" inputmode="numeric" />
 							</div>
 						</td>
 					</tr>
@@ -72,7 +72,7 @@ class NoFrixionCard extends NoFrixionGateway {
 						</td>
 						<td style="padding: 0; background-color: #f2f2f2; padding-left: 0.62em;">
 							<div id="nf-securityCode-container" class="form-control nf-border-radius" style="height:45px; width: 4em;">
-								<input type="text" id="nf-cardSecurityCode" name="cardSecurityCode" placeholder="CVC" size="5" maxlength="5" inputmode="numeric" />
+								<input type="text" id="nf-cardSecurityCode" name="nf-cardSecurityCode" placeholder="CVC" size="5" maxlength="5" inputmode="numeric" />
 							</div>
 						</td>
 					</tr>

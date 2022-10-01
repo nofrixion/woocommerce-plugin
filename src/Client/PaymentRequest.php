@@ -77,7 +77,7 @@ class PaymentRequest extends AbstractClient
 			'OriginUrl' => $originUrl,
 			'CallbackUrl' => $callbackUrl,
 			'PaymentMethodTypes' => implode(',', $paymentMethodTypes),
-			'OrderID' => $orderId,
+			//'OrderID' => $orderId,
 			'CardCreateToken' => $createToken ? 'true' : 'false',
 			'CustomerID' => $customerId ?? '',
 			'CardAuthorizeOnly' => $cardAuthorizeOnly ? 'true' : 'false',
