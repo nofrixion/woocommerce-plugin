@@ -6,8 +6,7 @@ namespace NoFrixion\WC\Helper;
 
 class ApiHelper {
 	public const API_URL = [
-		//'sandbox' => 'https://api-sandbox.nofrixion.com',
-		'sandbox' => 'https://host.docker.internal:44323',
+		'sandbox' => 'https://api-sandbox.nofrixion.com',
 		'production' => 'https://api.nofrixion.com'
 	];
 

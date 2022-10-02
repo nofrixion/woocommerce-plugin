@@ -263,7 +263,6 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		// Load NoFrixion payelement.
 		wp_enqueue_script( 'nofrixion_js', 'https://cdn.nofrixion.com/nofrixion.js' );
-		//wp_enqueue_script( 'nofrixion_js', 'https://localhost:44323'. '/nofrixion-dev.js' );
 
 		// Register custom JS.
 		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );
@@ -272,7 +271,6 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		wp_localize_script( 'woocommerce_nofrixion', 'NoFrixionWP', [
 			'url' => admin_url( 'admin-ajax.php' ),
 			'apiUrl' => $this->apiHelper->url,
-			//'apiUrl' => 'https://localhost:44323',
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
 			'is_change_payment_page' => isset( $_GET['change_payment_method'] ) ? 'yes' : 'no',
