@@ -16,6 +16,7 @@ class PaymentRequest extends AbstractClient
 		string $originUrl,
 		string $callbackUrl,
         PreciseNumber $amount,
+		string $customerEmailAddress,
 	    ?string $currency = null,
 	    ?array $paymentMethodTypes = null,
         ?string $orderId = null,
@@ -34,9 +35,10 @@ class PaymentRequest extends AbstractClient
 	        'CallbackUrl' => $callbackUrl,
 	        'PaymentMethodTypes' => implode(',', $paymentMethodTypes),
 	        'OrderID' => $orderId,
-	        'CardCreateToken' => $createToken ? 'true' : 'false',
+	        'CardCreateToken' => $createToken && $customerEmailAddress != "" ? 'true' : 'false',
 	        'CustomerID' => $customerId ?? '',
 	        'CardAuthorizeOnly' => $cardAuthorizeOnly ? 'true' : 'false',
+			'CustomerEmailAddress' => $customerEmailAddress
         ]);
 
         Logger::debug('createPaymentRequest() data sent: ' . $body);
@@ -62,7 +64,8 @@ class PaymentRequest extends AbstractClient
 		?string $orderId = null,
 		?bool $createToken = false,
 		?string $customerId = null,
-		?bool $cardAuthorizeOnly = false
+		?bool $cardAuthorizeOnly = false,
+		?string $customerEmailAddress = null
 	): array {
 		$url = $this->getApiUrl() . 'paymentrequests/' . urlencode($paymentRequestId);
 		$headers = $this->getRequestHeaders();
@@ -74,10 +77,11 @@ class PaymentRequest extends AbstractClient
 			'OriginUrl' => $originUrl,
 			'CallbackUrl' => $callbackUrl,
 			'PaymentMethodTypes' => implode(',', $paymentMethodTypes),
-			'OrderID' => $orderId,
-			'CardCreateToken' => $createToken ? 'true' : 'false',
+			//'OrderID' => $orderId,
+			'CardCreateToken' => $createToken && $customerEmailAddress !== "" && $customerEmailAddress !== null ? 'true' : 'false',
 			'CustomerID' => $customerId ?? '',
 			'CardAuthorizeOnly' => $cardAuthorizeOnly ? 'true' : 'false',
+			'CustomerEmailAddress' => $customerEmailAddress
 		]);
 
 		Logger::debug('Data sent on updatePaymentRequest: ' . $body);

@@ -262,7 +262,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 
 		// Load NoFrixion payelement.
-		wp_enqueue_script( 'nofrixion_js', $this->apiHelper->url . '/js/payelement.js' );
+		wp_enqueue_script( 'nofrixion_js', 'https://cdn.nofrixion.com/nofrixion.js' );
 
 		// Register custom JS.
 		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );
@@ -503,6 +503,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$originUrl,
 				$this->get_return_url($order),
 				$amount,
+				$order->get_billing_email(),
 				$currency,
 				[str_replace('nofrixion_', '', $this->getId())], // pass card, pisp, .. here
 				$orderNumber,
@@ -555,6 +556,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$orderNumber,
 				$createToken,
 				$createToken ? (string) $userId : null,
+				null,
+				$order->get_billing_email()
 			);
 
 			$this->updateOrderMetadata( $order->get_id(), $paymentRequest );
@@ -643,6 +646,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			$paymentRequest = $client->createPaymentRequest(
 				$originUrl,
 				$this->get_return_url($renewalOrder),
+				$order->get_billing_email(),
 				$amountFormatted,
 				$currency,
 				['cardtoken'],
