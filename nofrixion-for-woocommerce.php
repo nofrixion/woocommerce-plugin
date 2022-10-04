@@ -271,6 +271,7 @@ class NoFrixionWCPlugin {
 				site_url(),
 				site_url() . '/dummycallback',
 				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				WC()->cart->get_customer()->get_billing_email(),
 				null,
 				['card'],
 				null,
@@ -302,7 +303,8 @@ class NoFrixionWCPlugin {
 				null,
 				true,
 				get_current_user_id(),
-				true
+				true,
+				WC()->cart->get_customer()->get_billing_email()
 			);
 
 			if ($updatedPr) {
@@ -402,7 +404,7 @@ class NoFrixionWCPlugin {
 
 						// For subscriptions, also store the tokenisedCardId on the order for recurring charges.
 						if ($isSubscription) {
-							$order->update_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
+							$order->update_meta_data('NoFrixion_customerEmailAddress', $payment['customerEmailAddress'] );
 							$order->update_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
 							$order->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
 							$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );

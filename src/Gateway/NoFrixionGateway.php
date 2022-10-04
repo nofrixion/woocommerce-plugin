@@ -115,17 +115,18 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		// Handle save as token flag (to process it after payment on thank you page)
 		$currentGateway = $this->getId();
-		$newPaymentMethodFieldName = "wc-{$currentGateway}-new-payment-method";
+		$newPaymentMethodFieldName = "wc-nofrixion_card-new-payment-method";
+		//$newPaymentMethodFieldName = "wc-{$currentGateway}-payment-token-new";
 		$createToken = false;
-		Logger::debug('New payment method/save token checkbox : ' . $_POST[$newPaymentMethodFieldName]);
-		if ($_POST[$newPaymentMethodFieldName]) {
+		Logger::debug('New payment method/save token checkbox : ' . ISSET($_POST[$newPaymentMethodFieldName]));
+		if (ISSET($_POST[$newPaymentMethodFieldName])) {
 			$order->add_meta_data('NoFrixion_saveTokenSelected', 1);
 			$order->save();
 			$createToken = true;
 		}
 
 		// Load payment request id from session.
-		// $paymentRequestId = WC()->session->get(\NoFrixionWCPlugin::SESSION_PAYMENTREQUEST_ID);
+		 //$paymentRequestId = WC()->session->get(\NoFrixionWCPlugin::SESSION_PAYMENTREQUEST_ID);
 
 		$paymentRequestId = wc_clean( wp_unslash( $_POST['paymentRequestID']));
 
@@ -270,7 +271,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		// Pass object NoFrixionWP to be available on the frontend in nofrixion.js.
 		wp_localize_script( 'woocommerce_nofrixion', 'NoFrixionWP', [
 			'url' => admin_url( 'admin-ajax.php' ),
-			'apiUrl' => $this->apiHelper->url,
+			'apiUrl' => 'https://localhost:44323',
 			'apiNonce' => wp_create_nonce( 'nofrixion-nonce' ),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
 			'is_change_payment_page' => isset( $_GET['change_payment_method'] ) ? 'yes' : 'no',
