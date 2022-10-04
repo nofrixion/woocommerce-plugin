@@ -117,8 +117,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$currentGateway = $this->getId();
 		$newPaymentMethodFieldName = "wc-{$currentGateway}-new-payment-method";
 		$createToken = false;
-		Logger::debug('New payment method/save token checkbox : ' . $_POST[$newPaymentMethodFieldName]);
-		if ($_POST[$newPaymentMethodFieldName]) {
+		Logger::debug('New payment method/save token checkbox : ' . isset($_POST[$newPaymentMethodFieldName]));
+		if (isset($_POST[$newPaymentMethodFieldName])) {
 			$order->add_meta_data('NoFrixion_saveTokenSelected', 1);
 			$order->save();
 			$createToken = true;

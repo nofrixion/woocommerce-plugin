@@ -271,6 +271,7 @@ class NoFrixionWCPlugin {
 				site_url(),
 				site_url() . '/dummycallback',
 				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				WC()->cart->get_customer()->get_billing_email(),
 				null,
 				['card'],
 				null,
@@ -302,7 +303,8 @@ class NoFrixionWCPlugin {
 				null,
 				true,
 				get_current_user_id(),
-				true
+				true,
+				WC()->cart->get_customer()->get_billing_email()
 			);
 
 			if ($updatedPr) {
