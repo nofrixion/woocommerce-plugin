@@ -404,7 +404,7 @@ class NoFrixionWCPlugin {
 
 						// For subscriptions, also store the tokenisedCardId on the order for recurring charges.
 						if ($isSubscription) {
-							$order->update_meta_data('NoFrixion_customerEmailAddress', $payment['customerEmailAddress'] );
+							$order->update_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
 							$order->update_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
 							$order->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
 							$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
