@@ -4,7 +4,7 @@ Tags: payment, payments, credit card, payment request, payment gateway, payment 
 Requires at least: 5.2
 Tested up to: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.14
+Stable tag: 1.1.21
 License: MIT
 License URI: https://github.com/nofrixion/woocommerce-plugin/blob/master/license.txt
 
@@ -28,6 +28,8 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
+= 1.1.21 :: 2022-10-20 =
+* Updates for MoneyMoov API changes.
 = 1.1.15 :: 2022-09-28 =
 * Set customer email address for card payment.
 = 1.1.14 :: 2022-05-26 =

@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.10"
 
 services:
   db:
@@ -19,6 +19,7 @@ services:
     volumes:
       - wordpress_data:/var/www/html
       - ./:/var/www/html/wp-content/plugins/nofrixion-for-woocommerce
+      - ./xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     ports:
       - "8821:80"
     restart: always
@@ -27,6 +28,9 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_DB_NAME: wordpress
+      CURLOPT_SSL_VERIFYPEER: 0
+      CURLOPT_SSL_VERIFYHOST: 0
+      XDEBUG_CONFIG: client_host=host.docker.internal client_port=9000
 volumes:
   db_data: {}
   wordpress_data: {}

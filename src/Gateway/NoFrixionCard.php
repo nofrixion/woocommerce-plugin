@@ -45,34 +45,78 @@ class NoFrixionCard extends NoFrixionGateway {
 	}
 
 	public function payment_fields() {
+		
+
 		echo '
 			<div id="nf-error" role="alert" class="alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
+
 			<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
-				<table style="padding: 0;">
-					<tr style="padding: 0;">
-						<td colspan="2" style="padding: 0;">Card Number <span class="required">*</span></td>
-					</tr>
-					<tr style="padding: 0;">
-						<td colspan="2" style="background-color: #f2f2f2; padding:0 0 0 0.62em;">
-							<div id="nf-number-container" style="height:45px;"></div>
-						</td>
-					</tr>
-					<tr style="padding: 0;">
-						<td style="padding: 0;">Expiry <span class="required">*</span></td>
-						<td style="padding: 0;">CVN <span class="required">*</span></td>
-					</tr>
-					<tr style="padding: 0;">
-						<td style="padding: 0;">
-							<input type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
-							<span class="input-group-text">/</span>
-							<input type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
-						</td>
-						<td style="padding: 0; background-color: #f2f2f2; padding-left: 0.62em;">
-							<div id="nf-securityCode-container" class="form-control nf-border-radius" style="height:45px; width: 4em;"></div>
-						</td>
-					</tr>
-				</table>
-		</form><div style="height: 10px;"></div>';
+
+						<div class="form-row form-row-wide">
+
+							<label for="nf-cardNumber">Card Number <span class="required">*</span></label>
+
+								<input style="border: 1px solid lightgray !important;
+								height: 33px !important;
+								padding: 8px !important;
+								margin: 5px 0 5px 0 !important;
+								width: 100% !important;
+								background: white !important;
+								font-size: 16px !important;
+								box-shadow: none;" type="text" id="nf-cardNumber" name="nf-cardNumber" placeholder="0000 0000 0000 0000" size="24" maxlength="24" inputmode="numeric" />
+						</div>
+
+			<div style="margin: 10px 0 80px 0;">
+
+				<div class="form-row form-row-first" style="vertical-align: top;">
+
+					<label>Expiry Date <span class="required">*</span></label>
+
+					<div style="width: 100% !important;">
+
+					<input style="border: 1px solid lightgray !important;
+					height: 33px !important;
+					padding: 8px !important;
+					margin: 5px 0 5px 0 !important;
+					width: 40% !important;
+					background: white !important;
+					font-size: 16px !important;
+					box-shadow: none;" type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
+
+					<span style="width: 10% !important;" class="input-group-text">/</span>
+
+					<input style="border: 1px solid lightgray !important;
+					height: 33px !important;
+					padding: 8px !important;
+					margin: 5px 0 5px 0 !important;
+					width: 50% !important;
+					background: white !important;
+					font-size: 16px !important;
+					box-shadow: none;" type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
+
+					</div>
+
+				</div>
+
+				<div class="form-row form-row-last">
+					<label for="nf-cardSecurityCode">Card Code (CVC) <span class="required">*</span></label>
+
+					<div id="nf-securityCode-container" class="form-control nf-border-radius">
+						<input style="border: 1px solid lightgray !important;
+						height: 33px !important;
+						padding: 8px !important;
+						margin: 5px 0 5px 0 !important;
+						width: 100% !important;
+						background: white !important;
+						font-size: 16px !important;
+						box-shadow: none;" type="text" id="nf-cardSecurityCode" name="nf-cardSecurityCode" placeholder="CVC" size="5" maxlength="5" inputmode="numeric" />
+					</div>
+
+				</div>
+				</div>	
+			</form>
+
+			<div style="height: 10px;"></div>';
 
 		// Show save to account and saved payment methods.
 		if (is_user_logged_in() && !is_add_payment_method_page() && !$this->isChangingPaymentMethodForSubscription()) {

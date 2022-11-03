@@ -7,7 +7,7 @@
  * Author URI:      https://nofrixion.com
  * Text Domain:     nofrixion-for-woocommerce
  * Domain Path:     /languages
- * Version:         1.1.15
+ * Version:         1.1.21
  * Requires PHP:    7.4
  * Tested up to:    6.0
  * Requires at least: 5.2
@@ -19,8 +19,7 @@ use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\TokenManager;
 
 defined( 'ABSPATH' ) || exit();
-
-define( 'NOFRIXION_VERSION', '1.1.15' );
+define( 'NOFRIXION_VERSION', '1.1.21' );
 define( 'NOFRIXION_PLUGIN_FILE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'NOFRIXION_PLUGIN_URL', plugin_dir_url(__FILE__ ) );
 define( 'NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce' );
@@ -110,13 +109,13 @@ class NoFrixionWCPlugin {
 	public function dependenciesNotification() {
 		// Check PHP version.
 		if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
-			$versionMessage = sprintf( __( 'Your PHP version is %s but NoFrixion Greenfield Payment plugin requires version 7.4+.', 'nofrixion-for-woocommerce' ), PHP_VERSION );
+			$versionMessage = sprintf( __( 'Your PHP version is %s but the NoFrixion Payment plugin requires version 7.4+.', 'nofrixion-for-woocommerce' ), PHP_VERSION );
 			\NoFrixion\WC\Admin\Notice::addNotice('error', $versionMessage);
 		}
 
 		// Check if WooCommerce is installed.
 		if ( ! is_plugin_active('woocommerce/woocommerce.php') ) {
-			$wcMessage = __('WooCommerce seems to be not installed. Make sure you do before you activate NoFrixion Payment Gateway.', 'nofrixion-for-woocommerce');
+			$wcMessage = __('WooCommerce does not seem to be installed. You need to install it before you can activate NoFrixion Payment Gateway.', 'nofrixion-for-woocommerce');
 			\NoFrixion\WC\Admin\Notice::addNotice('error', $wcMessage);
 		}
 
@@ -143,7 +142,11 @@ class NoFrixionWCPlugin {
 				site_url(),
 				site_url() . '/dummyreturnurl',
 				\NoFrixion\WC\Helper\PreciseNumber::parseFloat($total),
+<<<<<<< HEAD
 				WC()->cart->get_customer()->get_email(),
+=======
+				WC()->cart->get_customer()->get_billing_email(),
+>>>>>>> b29b585cb15282ce4fe881007df01d4cb3f6c871
 				null,
 				['card'],
 				null,
@@ -271,6 +274,7 @@ class NoFrixionWCPlugin {
 				site_url(),
 				site_url() . '/dummycallback',
 				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				WC()->cart->get_customer()->get_billing_email(),
 				null,
 				['card'],
 				null,
@@ -302,7 +306,8 @@ class NoFrixionWCPlugin {
 				null,
 				true,
 				get_current_user_id(),
-				true
+				true,
+				WC()->cart->get_customer()->get_billing_email()
 			);
 
 			if ($updatedPr) {

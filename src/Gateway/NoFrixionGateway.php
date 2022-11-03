@@ -117,8 +117,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$currentGateway = $this->getId();
 		$newPaymentMethodFieldName = "wc-{$currentGateway}-new-payment-method";
 		$createToken = false;
-		Logger::debug('New payment method/save token checkbox : ' . $_POST[$newPaymentMethodFieldName]);
-		if ($_POST[$newPaymentMethodFieldName]) {
+		Logger::debug('New payment method/save token checkbox : ' . isset($_POST[$newPaymentMethodFieldName]));
+		if (isset($_POST[$newPaymentMethodFieldName])) {
 			$order->add_meta_data('NoFrixion_saveTokenSelected', 1);
 			$order->save();
 			$createToken = true;
@@ -262,7 +262,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 
 		// Load NoFrixion payelement.
-		wp_enqueue_script( 'nofrixion_js', $this->apiHelper->url . '/js/payelement.js' );
+		wp_enqueue_script( 'nofrixion_js', 'https://cdn.nofrixion.com/nofrixion.js' );
 
 		// Register custom JS.
 		wp_register_script( 'woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', [ 'jquery', 'nofrixion_js' ], false, true );
@@ -556,6 +556,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$orderNumber,
 				$createToken,
 				$createToken ? (string) $userId : null,
+				null,
+				$order->get_billing_email()
 			);
 
 			$this->updateOrderMetadata( $order->get_id(), $paymentRequest );
