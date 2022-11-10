@@ -12,7 +12,8 @@
  * Tested up to:    6.1 * Requires at least: 5.2
  */
 
-use NoFrixion\WC\Client\PaymentRequest;
+use NoFrixion\Client\PaymentRequest;
+use NoFrixion\Util\PreciseNumber;
 use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\TokenManager;
@@ -140,7 +141,7 @@ class NoFrixionWCPlugin {
 			$result = $client->createPaymentRequest(
 				site_url(),
 				site_url() . '/dummyreturnurl',
-				\NoFrixion\WC\Helper\PreciseNumber::parseFloat($total),
+				PreciseNumber::parseFloat($total),
 				WC()->cart->get_customer()->get_billing_email(),
 				null,
 				['card'],
@@ -191,7 +192,7 @@ class NoFrixionWCPlugin {
 			$result = $client->createPaymentRequest(
 				site_url(),
 				$callbackUrl,
-				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				PreciseNumber::parseFloat(0.00),
 				null,
 				['card'],
 				null,
@@ -268,7 +269,7 @@ class NoFrixionWCPlugin {
 			$result = $client->createPaymentRequest(
 				site_url(),
 				site_url() . '/dummycallback',
-				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				PreciseNumber::parseFloat(0.00),
 				WC()->cart->get_customer()->get_billing_email(),
 				null,
 				['card'],
@@ -295,7 +296,7 @@ class NoFrixionWCPlugin {
 				$result['id'],
 				site_url(),
 				$callbackUrl,
-				\NoFrixion\WC\Helper\PreciseNumber::parseFloat(0.00),
+				PreciseNumber::parseFloat(0.00),
 				null,
 				['card'],
 				null,

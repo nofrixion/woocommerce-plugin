@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Client;
+namespace NoFrixion\Client;
 
-use NoFrixion\WC\Exception\BadRequestException;
-use NoFrixion\WC\Exception\ForbiddenException;
-use NoFrixion\WC\Exception\RequestException;
-use NoFrixion\WC\Http\ClientInterface;
-use NoFrixion\WC\Http\CurlClient;
-use NoFrixion\WC\Http\Response;
+use NoFrixion\Exception\BadRequestException;
+use NoFrixion\Exception\ForbiddenException;
+use NoFrixion\Exception\RequestException;
+use NoFrixion\Http\ClientInterface;
+use NoFrixion\Http\CurlClient;
+use NoFrixion\Http\Response;
 
 class AbstractClient
 {

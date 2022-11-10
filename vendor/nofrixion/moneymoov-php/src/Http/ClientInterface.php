@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Http;
+namespace NoFrixion\Http;
 
-use NoFrixion\WC\Exception\ConnectException;
-use NoFrixion\WC\Exception\RequestException;
+use NoFrixion\Exception\ConnectException;
+use NoFrixion\Exception\RequestException;
 
 interface ClientInterface
 {

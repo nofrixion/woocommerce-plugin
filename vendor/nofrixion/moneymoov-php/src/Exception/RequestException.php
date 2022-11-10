@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Exception;
+namespace NoFrixion\Exception;
 
-use NoFrixion\WC\Http\ResponseInterface;
+use NoFrixion\Http\ResponseInterface;
 
 class RequestException extends NoFrixionException
 {

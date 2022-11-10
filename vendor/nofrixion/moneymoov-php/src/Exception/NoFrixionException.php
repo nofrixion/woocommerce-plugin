@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Exception;
+namespace NoFrixion\Exception;
 
 class NoFrixionException extends \RuntimeException
 {

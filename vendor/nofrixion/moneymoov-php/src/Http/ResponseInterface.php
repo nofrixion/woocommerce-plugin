@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Http;
+namespace NoFrixion\Http;
 
 interface ResponseInterface
 {
