@@ -4,11 +4,11 @@ declare( strict_types=1 );
 
 namespace NoFrixion\WC\Gateway;
 
-use NoFrixion\WC\Client\PaymentRequest;
+use NoFrixion\Client\PaymentRequest;
 use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\OrderStates;
-use NoFrixion\WC\Helper\PreciseNumber;
+use NoFrixion\Util\PreciseNumber;
 
 abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 

@@ -4,11 +4,6 @@ declare( strict_types=1 );
 
 namespace NoFrixion\WC\Admin;
 
-use NoFrixion\Client\ApiKey;
-use NoFrixion\Client\StorePaymentMethod;
-use NoFrixion\WC\Helper\GreenfieldApiAuthorization;
-use NoFrixion\WC\Helper\ApiHelper;
-use NoFrixion\WC\Helper\GreenfieldApiWebhook;
 use NoFrixion\WC\Helper\Logger;
 
 class GlobalSettings extends \WC_Settings_Page {

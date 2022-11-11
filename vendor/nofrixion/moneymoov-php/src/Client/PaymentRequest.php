@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Client;
+namespace NoFrixion\Client;
 
-use NoFrixion\WC\Helper\Logger;
-use NoFrixion\WC\Helper\PreciseNumber;
+use NoFrixion\Util\PreciseNumber;
 
 class PaymentRequest extends AbstractClient
 {
@@ -41,7 +40,6 @@ class PaymentRequest extends AbstractClient
 			'CustomerEmailAddress' => $customerEmailAddress
         ]);
 
-        Logger::debug('createPaymentRequest() data sent: ' . $body);
         $response = $this->getHttpClient()->request($method, $url, $headers, $body);
 
         if (in_array($response->getStatus() ,[200, 201])) {
@@ -84,7 +82,6 @@ class PaymentRequest extends AbstractClient
 			'CustomerEmailAddress' => $customerEmailAddress
 		]);
 
-		Logger::debug('Data sent on updatePaymentRequest: ' . $body);
 		$response = $this->getHttpClient()->request($method, $url, $headers, $body);
 
 		if (in_array($response->getStatus() ,[200, 201])) {
@@ -146,7 +143,6 @@ class PaymentRequest extends AbstractClient
 			'TokenisedCardID' => $tokenisedCardId
 		]);
 
-		Logger::debug('payWithCardToken() data sent: ' . $body);
 		$response = $this->getHttpClient()->request($method, $url, $headers, $body);
 
 		if (in_array($response->getStatus() ,[200, 201])) {

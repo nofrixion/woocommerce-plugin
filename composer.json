@@ -12,5 +12,8 @@
       "name": "Andreas Tasch",
       "email": "andy.tasch@gmail.com"
     }
-  ]
+  ],
+  "require": {
+    "nofrixion/moneymoov-php": "^1.0"
+  }
 }

@@ -10,6 +10,7 @@ class ComposerStaticInitb239ea4f9e826c6bcbffbb435c068265
         'N' => 
         array (
             'NoFrixion\\WC\\' => 13,
+            'NoFrixion\\' => 10,
         ),
     );
 
@@ -17,6 +18,10 @@ class ComposerStaticInitb239ea4f9e826c6bcbffbb435c068265
         'NoFrixion\\WC\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
+        ),
+        'NoFrixion\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src',
         ),
     );
 
