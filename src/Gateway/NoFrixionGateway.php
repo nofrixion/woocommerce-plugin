@@ -144,75 +144,83 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$hasSubscription = $this->checkWCOrderHasSubscription($order);
 		Logger::debug( 'Order contains subscription: ' . ($hasSubscription ? 'true' : 'false') );
 
-		// For subscriptions we also create a token.
+		// For subscriptions, we also create a token.
 		if ($hasSubscription) {
 			$createToken = true;
 		}
 
 		// Update the payment request with the final order data.
-		Logger::debug( 'Updating PaymentRequest on NoFrixion.' );
-		if ( $paymentRequest = $this->updatePaymentRequest( $paymentRequestId, $order, $createToken ) ) {
+		// We can only update the payment request once, so we need to track it.
+		$paymentRequestUpdated = get_transient($paymentRequestId);
+		if ($paymentRequestUpdated !== 'updated') {
+			Logger::debug( 'Updating PaymentRequest on NoFrixion.' );
+			if ( $paymentRequest = $this->updatePaymentRequest( $paymentRequestId, $order, $createToken ) ) {
+				Logger::debug( 'Updating payment request successful.' );
+				Logger::debug( 'PaymentRequest data: ' );
+				Logger::debug( $paymentRequest );
+				set_transient($paymentRequestId, 'updated', 60*10);
+			}
+		} else {
+			Logger::debug('Skipped updating, payment request already updated once.');
+		}
 
-			Logger::debug( 'Updating payment request successful, redirecting user.' );
-			Logger::debug( 'PaymentRequest data: ' );
-			Logger::debug( $paymentRequest );
-
-			// Handle existing token selected for payment.
-			// We directly redirect the user from here on success, otherwise continue with the response below.
-			Logger::debug('Checking for existing payment.');
-			$paymentTokenFieldName = "wc-{$currentGateway}-payment-token";
-			if ( isset( $_POST[$paymentTokenFieldName] ) && 'new' !== $_POST[$paymentTokenFieldName] ) {
-				Logger::debug('Handle existing token payment.');
-				$tokenId = wc_clean( $_POST[$paymentTokenFieldName]);
-				Logger::debug('Found existing token with id: ' . $tokenId);
-				$token = \WC_Payment_Tokens::get($tokenId);
-				if ( $token->get_user_id() !== get_current_user_id() ) {
-					// todo: show notice, wc_add_notice()
-					Logger::debug('Loaded token user id does not match current user id. Token id: ' . $tokenId);
-					return;
-				}
-
-				// Try to pay with the saved token.
-				if ($paywithTokenResult = $this->payWithToken($paymentRequestId, $token)) {
-					$order->update_meta_data('NoFrixion_tokenpayment_status', $paywithTokenResult['status']);
-					$order->update_meta_data('NoFrixion_tokenpayment_authorizedAmount', $paywithTokenResult['authorizedAmount']);
-					$order->update_meta_data('NoFrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
-					$order->update_meta_data('NoFrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
-					$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $token->get_token() );
-					$order->save();
-
-					Logger::debug('Successfully paid with existing token: ' . print_r($paywithTokenResult, true));
-
-					if ($paywithTokenResult['status'] === 'AUTHORIZED') {
-						$order->payment_complete();
-						$order->add_order_note('Payment with existing token successfully finished. TokenisedCardId: ' . $token->get_token() . ' TransactionID: ' . $paywithTokenResult['transactionID']);
-						Logger::debug('Successfully completed token payment. Redirecting directly to received-order page.');
-						$orderPaidWithToken = true;
-					} else {
-						$failedMsg = 'Failed to pay with token, returned other status than AUTHORIZED, payment failed. TokenisedCardId: ' . $token->get_token();
-						Logger::debug($failedMsg);
-						// Todo: maybe keep order in pending state here.
-						$order->update_status('failed', $failedMsg);
-						return ['result' => 'failure'];
-					}
-				} else {
-					// Todo: maybe keep order in pending state here.
-					$order->update_status('failed', 'Error processing payment with token, tokenisedCardId: ' . $token->get_token());
-				}
-			} else {
-				Logger::debug('No existing token payment selected, continuing.');
+		// Handle existing token selected for payment.
+		// We directly redirect the user from here on success, otherwise continue with the response below.
+		Logger::debug('Checking for existing token payment.');
+		$paymentTokenFieldName = "wc-{$currentGateway}-payment-token";
+		if ( isset( $_POST[$paymentTokenFieldName] ) && 'new' !== $_POST[$paymentTokenFieldName] ) {
+			Logger::debug('Handle existing token payment.');
+			$tokenId = wc_clean( $_POST[$paymentTokenFieldName]);
+			Logger::debug('Found existing token with id: ' . $tokenId);
+			$token = \WC_Payment_Tokens::get($tokenId);
+			if ( $token->get_user_id() !== get_current_user_id() ) {
+				// todo: show notice, wc_add_notice()
+				Logger::debug('Loaded token user id does not match current user id. Token id: ' . $tokenId);
+				return ['result' => 'failure'];
 			}
 
-			return [
-				'result'   => 'success',
-				'redirect' => $order->get_checkout_payment_url(false),
-				'orderId' => $order->get_id(),
-				'paymentRequestId' => $paymentRequest['id'],
-				'hasSubscription' => $hasSubscription,
-				'orderPaidWithToken' => $orderPaidWithToken,
-				'orderReceivedPage' => $order->get_checkout_order_received_url(),
-			];
+			// Try to pay with the saved token.
+			$paywithTokenResult = $this->payWithToken($paymentRequestId, $token);
+			if ($paywithTokenResult) {
+				$order->update_meta_data('NoFrixion_tokenpayment_status', $paywithTokenResult['status']);
+				$order->update_meta_data('NoFrixion_tokenpayment_authorizedAmount', $paywithTokenResult['authorizedAmount']);
+				$order->update_meta_data('NoFrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
+				$order->update_meta_data('NoFrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
+				$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $token->get_token() );
+				$order->save();
+
+				Logger::debug('Successfully paid with existing token: ' . print_r($paywithTokenResult, true));
+
+				if ($paywithTokenResult['status'] === 'AUTHORIZED') {
+					$order->payment_complete();
+					$order->add_order_note('Payment with existing token successfully finished. TokenisedCardId: ' . $token->get_token() . ' TransactionID: ' . $paywithTokenResult['transactionID']);
+					Logger::debug('Successfully completed token payment. Redirecting directly to received-order page.');
+					$orderPaidWithToken = true;
+				} else {
+					$failedMsg = 'Failed to pay with token, returned other status than AUTHORIZED, payment failed. TokenisedCardId: ' . $token->get_token();
+					Logger::debug($failedMsg);
+					// Todo: maybe keep order in pending state here.
+					$order->update_status('failed', $failedMsg);
+					return ['result' => 'failure'];
+				}
+			} else {
+				$order->add_order_note('Error processing payment with token, tokenisedCardId: ' . $token->get_token() . ' Check debug log for details.');
+				return ['result' => 'failure'];
+			}
+		} else {
+			Logger::debug('No existing token payment selected, continuing.');
 		}
+
+		Logger::debug('All done, redirecting user.');
+		return [
+			'result'   => 'success',
+			'redirect' => $order->get_checkout_payment_url(false),
+			'orderId' => $order->get_id(),
+			'paymentRequestId' => $paymentRequestId,
+			'hasSubscription' => $hasSubscription,
+			'orderPaidWithToken' => $orderPaidWithToken,
+			'orderReceivedPage' => $order->get_checkout_order_received_url(),
+		];
 	}
 
 	public function checkWCOrderHasSubscription(\WC_order $order): bool {

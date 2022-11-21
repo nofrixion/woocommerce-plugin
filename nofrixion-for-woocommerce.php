@@ -360,7 +360,7 @@ class NoFrixionWCPlugin {
 
 		// Only process payment status if not already done.
 		if (
-			!in_array($currentOrderStatus, ['processing', 'completed', 'failed']) &&
+			!in_array($currentOrderStatus, ['processing', 'completed']) &&
 			$paymentRequestID
 		) {
 			// Check PaymentRequest.
