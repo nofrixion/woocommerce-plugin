@@ -3,7 +3,7 @@
         'name' => 'nofrixion/nofrixion-for-woocommerce',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '56ad522ee5e1e4cb5b713cea9a563b465b14dc95',
+        'reference' => '8c39263050d3ea432ce7190b9ef27ae49ad9881a',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'nofrixion/moneymoov-php' => array(
-            'pretty_version' => 'v1.0.0',
-            'version' => '1.0.0.0',
-            'reference' => '44dbf0ea9400850589eaec6d38663c9322390bd4',
+            'pretty_version' => 'v1.1.0',
+            'version' => '1.1.0.0',
+            'reference' => 'b87bc7567c2b38414a6b3399d92648212406a0f3',
             'type' => 'library',
             'install_path' => __DIR__ . '/../nofrixion/moneymoov-php',
             'aliases' => array(),
@@ -22,7 +22,7 @@
         'nofrixion/nofrixion-for-woocommerce' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '56ad522ee5e1e4cb5b713cea9a563b465b14dc95',
+            'reference' => '8c39263050d3ea432ce7190b9ef27ae49ad9881a',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

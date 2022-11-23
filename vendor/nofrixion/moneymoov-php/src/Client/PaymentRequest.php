@@ -167,4 +167,29 @@ class PaymentRequest extends AbstractClient
 			throw $this->getExceptionByStatusCode($method, $url, $response);
 		}
 	}
+
+	/**
+	 * @see https://docs.nofrixion.com/reference/post_api-v1-paymentrequests-id-pisp
+	 */
+	public function submitPaymentInitiationRequest(
+		string $paymentRequestId,
+		string $providerId
+	): array {
+		$url = $this->getApiUrl() . 'paymentrequests/' . urlencode($paymentRequestId) . '/pisp';
+		$headers = $this->getRequestHeaders();
+		$method = 'POST';
+
+		$body = http_build_query([
+			'ProviderID' => $providerId
+		]);
+
+		$response = $this->getHttpClient()->request($method, $url, $headers, $body);
+
+		if (in_array($response->getStatus() ,[200, 201])) {
+			return json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+		} else {
+			throw $this->getExceptionByStatusCode($method, $url, $response);
+		}
+	}
 }
+
