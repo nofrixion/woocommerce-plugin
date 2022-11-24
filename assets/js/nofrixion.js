@@ -205,6 +205,7 @@ var submitPayFrame = function (e) {
 	if (processPaymentRequestOrder()) {
 		// Remove the local storage item for the next order.
 		console.log('Trigger submitting nofrixion form.');
+		blockElement('.woocommerce-checkout-payment');
 		nfpayByCard();
 	}
 
@@ -221,13 +222,28 @@ var submitPisp = function (e) {
 	let $checkoutForm = jQuery('form.checkout');
 
 	if (jQuery('input:radio[name="wc-pisp-provider"]:checked').length > 0) {
-		$checkoutForm.addClass('processing');
+		blockElement('.woocommerce-checkout-payment');
 		processPaymentRequestOrder()
 	} else {
 		submitError( '<div class="woocommerce-error">' + NoFrixionWP.pispNoProviderSelected + '</div>' );
 	}
 
 	return false;
+};
+
+/**
+ * Block UI of a given element.
+ */
+var blockElement = function (cssClass) {
+	console.log('Triggered blockElement');
+
+	jQuery( cssClass ).block({
+		message: null,
+		overlayCSS: {
+			background: '#fff',
+			opacity: 0.6
+		}
+	});
 };
 
 /**
@@ -261,6 +277,7 @@ var noFrixionSelected = function () {
 	var checkout_form = jQuery('form.woocommerce-checkout');
 	var selected_gateway = jQuery('form[name="checkout"] input[name="payment_method"]:checked').val();
 	var supported_methods = ['nofrixion_card', 'nofrixion_pisp'];
+	jQuery('.woocommerce-checkout-payment').unblock();
 
 	if (supported_methods.includes(selected_gateway)) {
 		createPaymentRequest(selected_gateway);
@@ -268,6 +285,10 @@ var noFrixionSelected = function () {
 		if (selected_gateway === 'nofrixion_card') {
 			checkout_form.off('checkout_place_order', submitPisp);
 			checkout_form.on('checkout_place_order', submitPayFrame);
+			// Unblock UI on error.
+			jQuery('#nf-error').on('DOMSubtreeModified', function(){
+				jQuery('.woocommerce-checkout-payment').unblock();
+			});
 		} else {
 			checkout_form.off('checkout_place_order', submitPayFrame);
 			checkout_form.on('checkout_place_order', submitPisp);

@@ -45,10 +45,10 @@ class NoFrixionCard extends NoFrixionGateway {
 	}
 
 	public function payment_fields() {
-		
+
 
 		echo '
-			<div id="nf-error" role="alert" class="alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
+			<div id="nf-error" role="alert" class="woocommerce-error alert-danger alert-dismissible nf-error-div nf-border-radius" style="display: none;"></div>
 
 			<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
 
@@ -113,7 +113,7 @@ class NoFrixionCard extends NoFrixionGateway {
 					</div>
 
 				</div>
-				</div>	
+				</div>
 			</form>
 
 			<div style="height: 10px;"></div>';
