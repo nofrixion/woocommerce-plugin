@@ -14,7 +14,7 @@ class NoFrixionPisp extends NoFrixionGateway {
 
 	public static array $providers = [
 		'rb' => 'H120000002',
-		'other' => 'H120000003'
+		'lloyds' => 'H120000001'
 	];
 
 	public function __construct() {
@@ -41,7 +41,7 @@ class NoFrixionPisp extends NoFrixionGateway {
 				<input type='radio' value='rb' name='wc-pisp-provider' id='wc-pisp-rb' /><label for='wc-pisp-rb'>Royal Bank of Scotland</label>
 			</div>
 			<div class='row'>
-				<input type='radio' value='other' name='wc-pisp-provider' id='wc-pisp-other' /><label for='wc-pisp-other'>Other</label>
+				<input type='radio' value='lloyds' name='wc-pisp-provider' id='wc-pisp-lloyds' /><label for='wc-pisp-lloyds'>Lloyds</label>
 			</div>
 		";
 	}
