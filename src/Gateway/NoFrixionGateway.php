@@ -176,7 +176,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			if ( $token->get_user_id() !== get_current_user_id() ) {
 				// todo: show notice, wc_add_notice()
 				Logger::debug('Loaded token user id does not match current user id. Token id: ' . $tokenId);
-				return ['result' => 'failure'];
+				throw new \Exception(__('You are not allowed to use this saved card, aborting', 'nofrixion-for-woocommerce'));
 			}
 
 			// Try to pay with the saved token.
@@ -201,11 +201,11 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 					Logger::debug($failedMsg);
 					// Todo: maybe keep order in pending state here.
 					$order->update_status('failed', $failedMsg);
-					return ['result' => 'failure'];
+					throw new \Exception(__('Card was not authorized. Please try another one.', 'nofrixion-for-woocommerce'));
 				}
 			} else {
 				$order->add_order_note('Error processing payment with token, tokenisedCardId: ' . $token->get_token() . ' Check debug log for details.');
-				return ['result' => 'failure'];
+				throw new \Exception(__('Error processing the payment with your saved card. Please try another one.', 'nofrixion-for-woocommerce'));
 			}
 		} else {
 			Logger::debug('No existing token payment selected, continuing.');
@@ -220,6 +220,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			'hasSubscription' => $hasSubscription,
 			'orderPaidWithToken' => $orderPaidWithToken,
 			'orderReceivedPage' => $order->get_checkout_order_received_url(),
+			'isPispPayment' => false,
 		];
 	}
 
@@ -284,6 +285,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			'is_change_payment_page' => isset( $_GET['change_payment_method'] ) ? 'yes' : 'no',
 			'is_pay_for_order_page' => is_wc_endpoint_url( 'order-pay' ) ? 'yes' : 'no',
 			'is_add_payment_method_page' => is_add_payment_method_page() ? 'yes' : 'no',
+			'pispNoProviderSelected' => __('Please select a bank to continue.', 'nofrixion-for-woocommerce'),
 		] );
 
 		// Add the registered nofrixion script to frontend.

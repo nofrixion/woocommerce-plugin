@@ -1,6 +1,6 @@
 {
   "name": "nofrixion/moneymoov-php",
-  "description": "Nofrixion MoneyMoov PHP Library",
+  "description": "NoFrixion MoneyMoov PHP Library",
   "type": "library",
   "license": "MIT",
   "autoload": {

@@ -1,24 +1,25 @@
 /**
  * Trigger ajax request to create only payment request.
  */
-var createPaymentRequest = function () {
+var createPaymentRequest = function (gateway) {
 	// Todo: when implementing PISP we need to make sure to update to new PaymentRequestID in case of switching payment
 	//  methods. Or to avoid logic here we could create card,pisp payment request IDs for now.
 
-	if (window.nfWCpaymentRequestID === undefined) {
+	if (window.nfWCpaymentRequestID === undefined || window.nfWCType !== gateway) {
 
 		console.log('Creating payment request.');
 
 		let data = {
 			'action': 'nofrixion_payment_request_init',
 			'apiNonce': NoFrixionWP.apiNonce,
-			'gateway': jQuery('form[name="checkout"] input[name="payment_method"]:checked').val()
+			'gateway': gateway
 		};
 
 		jQuery.post(NoFrixionWP.url, data, function (response) {
 			if (response.data.paymentRequestId) {
 				try {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
+					window.nfWCType = gateway;
 					//NoFrixionStorage.setItem('paymentRequestID', response.data.paymentRequestId, 90);
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
 					window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-cardNumber',
@@ -169,6 +170,11 @@ var processPaymentRequestOrder = function () {
 				window.location = response.orderReceivedPage;
 			}
 
+			// On pisp payments, redirect to provider.
+			if (response.isPispPayment === true) {
+				window.location = response.pispRedirectUrl;
+			}
+
 			if (response.paymentRequestId) {
 				processedOrder = true;
 			} else {
@@ -199,10 +205,45 @@ var submitPayFrame = function (e) {
 	if (processPaymentRequestOrder()) {
 		// Remove the local storage item for the next order.
 		console.log('Trigger submitting nofrixion form.');
+		blockElement('.woocommerce-checkout-payment');
 		nfpayByCard();
 	}
 
 	return false;
+};
+
+/**
+ * Trigger payframe button submit.
+ */
+var submitPisp = function (e) {
+	e.preventDefault();
+	console.log('Triggered submitPisp()');
+	// Make sure at least one pisp provider selected.
+	let $checkoutForm = jQuery('form.checkout');
+
+	if (jQuery('input:radio[name="wc-pisp-provider"]:checked').length > 0) {
+		blockElement('.woocommerce-checkout-payment');
+		processPaymentRequestOrder()
+	} else {
+		submitError( '<div class="woocommerce-error">' + NoFrixionWP.pispNoProviderSelected + '</div>' );
+	}
+
+	return false;
+};
+
+/**
+ * Block UI of a given element.
+ */
+var blockElement = function (cssClass) {
+	console.log('Triggered blockElement');
+
+	jQuery( cssClass ).block({
+		message: null,
+		overlayCSS: {
+			background: '#fff',
+			opacity: 0.6
+		}
+	});
 };
 
 /**
@@ -234,12 +275,27 @@ var submitPayFrameAuthorizeCard = function (e) {
  */
 var noFrixionSelected = function () {
 	var checkout_form = jQuery('form.woocommerce-checkout');
-	if (jQuery('form[name="checkout"] input[name="payment_method"]:checked').val() === 'nofrixion_card') {
-		createPaymentRequest();
+	var selected_gateway = jQuery('form[name="checkout"] input[name="payment_method"]:checked').val();
+	var supported_methods = ['nofrixion_card', 'nofrixion_pisp'];
+	jQuery('.woocommerce-checkout-payment').unblock();
+
+	if (supported_methods.includes(selected_gateway)) {
+		createPaymentRequest(selected_gateway);
 		// Bind our custom event handler to checkout button.
-		checkout_form.on('checkout_place_order', submitPayFrame);
+		if (selected_gateway === 'nofrixion_card') {
+			checkout_form.off('checkout_place_order', submitPisp);
+			checkout_form.on('checkout_place_order', submitPayFrame);
+			// Unblock UI on error.
+			jQuery('#nf-error').on('DOMSubtreeModified', function(){
+				jQuery('.woocommerce-checkout-payment').unblock();
+			});
+		} else {
+			checkout_form.off('checkout_place_order', submitPayFrame);
+			checkout_form.on('checkout_place_order', submitPisp);
+		}
 	} else {
-		// Undo bind custom event handler.
+		// Unbind custom event handlers.
+		checkout_form.off('checkout_place_order', submitPisp);
 		checkout_form.off('checkout_place_order', submitPayFrame);
 	}
 }

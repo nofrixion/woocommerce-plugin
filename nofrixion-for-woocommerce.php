@@ -133,7 +133,12 @@ class NoFrixionWCPlugin {
 			wp_die( 'Unauthorized!', '', [ 'response' => 401 ] );
 		}
 
-		$total = (float) WC()->cart->get_total();
+		$gateway = str_replace('nofrixion_', '', sanitize_key($_POST['gateway']));
+		if (!in_array($gateway, ['card', 'pisp'])) {
+			wp_die( 'Payment gateway not supported.', '', [ 'response' => 400 ] );
+		}
+
+		$total = (float) WC()->cart->total;
 
 		try {
 			$apiHelper = new ApiHelper();
@@ -143,14 +148,14 @@ class NoFrixionWCPlugin {
 				site_url() . '/dummyreturnurl',
 				PreciseNumber::parseFloat($total),
 				WC()->cart->get_customer()->get_billing_email(),
-				null,
-				['card'],
+				get_option('woocommerce_currency', null),
+				[$gateway],
 				null,
 				true,
 				'temp' . WC()->cart->get_customer()->get_id()
 			);
 
-			Logger::debug('result from dummy: ' . print_r($result, true));
+			Logger::debug('Result from temporary payment request: ' . print_r($result, true));
 
 			// Store payment request id in the session.
 			// Todo: needs more testing if gets cleared after checkout complete to not reuse old data.
