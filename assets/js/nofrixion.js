@@ -111,8 +111,13 @@ var createPaymentRequestAuthorizeCard = function () {
 				try {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
-						'nf-securityCode-container', 'nf-error', NoFrixionWP.apiUrl);
+					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(
+						window.nfWCpaymentRequestID,
+						'nf-CardNumber',
+						'nf-cardSecurityCode',
+						'nf-error',
+						NoFrixionWP.apiUrl
+					);
 					window.nfPayElement.load();
 					console.log(response);
 				} catch (ex) {
