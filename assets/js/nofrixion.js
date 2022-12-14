@@ -113,7 +113,7 @@ var createPaymentRequestAuthorizeCard = function () {
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
 					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(
 						window.nfWCpaymentRequestID,
-						'nf-CardNumber',
+						'nf-cardNumber',
 						'nf-cardSecurityCode',
 						'nf-error',
 						NoFrixionWP.apiUrl
