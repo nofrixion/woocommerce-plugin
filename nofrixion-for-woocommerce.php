@@ -378,6 +378,8 @@ class NoFrixionWCPlugin {
 				$tokenizedCard = $paymentRequest['tokenisedCards'][0] ?? null;
 				$paymentStatus = $paymentRequest['result']['result'] ?? null;
 
+				Logger::debug('Payment request data: ' . print_r($paymentRequest, true));
+
 				if (isset($paymentStatus)) {
 					switch ( $paymentStatus ) {
 						case "FullyPaid":
