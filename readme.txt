@@ -28,6 +28,8 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
+= 1.1.25 :: 2022-12-20 =
+* Bug fixes.
 = 1.1.24 :: 2022-11-27 =
 * Bug fixes and add pay with bank option.
 = 1.1.23 :: 2022-11-03 =
