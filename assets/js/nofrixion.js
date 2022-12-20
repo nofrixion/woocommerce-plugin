@@ -152,6 +152,9 @@ var processPaymentRequestOrder = function () {
 
 		console.log('Creating order and processing checkout.');
 
+		// Block the UI.
+		blockElement('.woocommerce-checkout-payment');
+
 		// Prepare form data and additional required data.
 		let formData = jQuery('form.checkout').serialize();
 		let additionalData = {
@@ -168,7 +171,6 @@ var processPaymentRequestOrder = function () {
 		jQuery.post(wc_checkout_params.checkout_url, data, function (response) {
 			console.log('Received response when processing PaymentRequestOrder: ');
 			console.log(response);
-			// Todo handle returned WC errors.
 
 			// Payment done by token, redirect directly to order received page.
 			if (response.orderPaidWithToken === true) {
@@ -183,6 +185,7 @@ var processPaymentRequestOrder = function () {
 			if (response.paymentRequestId) {
 				processedOrder = true;
 			} else {
+				unblockElement('.woocommerce-checkout-payment');
 				// Show errors.
 				if ( response.messages ) {
 					submitError( response.messages );
@@ -191,6 +194,7 @@ var processPaymentRequestOrder = function () {
 				}
 			}
 		}).fail(function () {
+			unblockElement('.woocommerce-checkout-payment');
 			submitError( '<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>' );
 		});
 
@@ -208,8 +212,7 @@ var submitPayFrame = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe');
 	if (processPaymentRequestOrder()) {
-		// Remove the local storage item for the next order.
-		console.log('Trigger submitting nofrixion form.');
+		console.log('Trigger submitting nofrixion form to api.');
 		blockElement('.woocommerce-checkout-payment');
 		nfpayByCard();
 	}
@@ -240,7 +243,7 @@ var submitPisp = function (e) {
  * Block UI of a given element.
  */
 var blockElement = function (cssClass) {
-	console.log('Triggered blockElement');
+	console.log('Triggered blockElement.');
 
 	jQuery( cssClass ).block({
 		message: null,
@@ -252,13 +255,19 @@ var blockElement = function (cssClass) {
 };
 
 /**
+ * Unblock UI of a given element.
+ */
+var unblockElement = function (cssClass) {
+	console.log('Triggered unblockElement.');
+	jQuery( cssClass ).unblock();
+};
+
+/**
  * Trigger payframe (change payment method) button submit.
  */
 var submitPayFrameChangePM = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe (change pm)');
-	// Make sure the UI is not blocked.
-	jQuery(this).unblock();
 	nfpayByCard();
 	return false;
 };
@@ -269,8 +278,6 @@ var submitPayFrameChangePM = function (e) {
 var submitPayFrameAuthorizeCard = function (e) {
 	e.preventDefault();
 	console.log('Triggered submit payframe (authorize card)');
-	// Make sure the UI is not blocked.
-	jQuery(this).unblock();
 	nfpayByCard();
 	return false;
 };
@@ -282,7 +289,7 @@ var noFrixionSelected = function () {
 	var checkout_form = jQuery('form.woocommerce-checkout');
 	var selected_gateway = jQuery('form[name="checkout"] input[name="payment_method"]:checked').val();
 	var supported_methods = ['nofrixion_card', 'nofrixion_pisp'];
-	jQuery('.woocommerce-checkout-payment').unblock();
+	unblockElement('.woocommerce-checkout-payment');
 
 	if (supported_methods.includes(selected_gateway)) {
 		createPaymentRequest(selected_gateway);
@@ -291,8 +298,8 @@ var noFrixionSelected = function () {
 			checkout_form.off('checkout_place_order', submitPisp);
 			checkout_form.on('checkout_place_order', submitPayFrame);
 			// Unblock UI on error.
-			jQuery('#nf-error').on('DOMSubtreeModified', function(){
-				jQuery('.woocommerce-checkout-payment').unblock();
+			jQuery('#nf-error').on('DOMNodeInserted', function(){
+				unblockElement('.woocommerce-checkout-payment');
 			});
 		} else {
 			checkout_form.off('checkout_place_order', submitPayFrame);
@@ -464,4 +471,13 @@ jQuery(function ($) {
 	if ( 'yes' === NoFrixionWP.is_add_payment_method_page) {
 		noFrixionAuthorizeCard();
 	}
+
+	/**
+	 * Detect closing of NoFrixion modal and stop blocking UI.
+	 */
+	$(document).on('DOMNodeRemoved', function(e) {
+		if ($(e.target).hasClass('nf-modal')) {
+			$('.woocommerce-checkout-payment').unblock();
+		}
+	});
 });
