@@ -67,7 +67,7 @@ var createPaymentRequestChangePM = function () {
 				try {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(window.nfWCpaymentRequestID, 'nf-number-container',
+					window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-number-container',
 						'nf-securityCode-container', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement.load();
 					jQuery('form#order_review').append('<input type="hidden" name="paymentRequestID" value="' + window.nfWCpaymentRequestID + '" />');
@@ -111,7 +111,7 @@ var createPaymentRequestAuthorizeCard = function () {
 				try {
 					window.nfWCpaymentRequestID = response.data.paymentRequestId;
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					window.nfPayElement = new NoFrixionPayElementHeadlessFlex(
+					window.nfPayElement = new NoFrixionPayElementHeadless(
 						window.nfWCpaymentRequestID,
 						'nf-cardNumber',
 						'nf-cardSecurityCode',

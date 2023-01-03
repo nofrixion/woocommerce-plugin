@@ -510,7 +510,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
 
 			$paymentRequest = $client->createPaymentRequest(
-				$originUrl,
+				'',
 				$this->get_return_url($order),
 				$amount,
 				$order->get_billing_email(),
@@ -558,7 +558,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 			$paymentRequest = $client->updatePaymentRequest(
 				$paymentRequestId,
-				$originUrl,
+				'',
 				$this->get_return_url($order),
 				$amount,
 				$currency,
@@ -654,7 +654,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		// Create payment request with cardtoken payment type.
 		try {
 			$paymentRequest = $client->createPaymentRequest(
-				$originUrl,
+				'',
 				$this->get_return_url($renewalOrder),
 				$order->get_billing_email(),
 				$amountFormatted,
