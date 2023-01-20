@@ -28,6 +28,8 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
+= 1.1.27 :: 2023-01-20 =
+Adjustment for new payelement headless fix.
 = 1.1.26 :: 2023-01-03 =
 * Bug fixes.
 = 1.1.25 :: 2022-12-20 =
