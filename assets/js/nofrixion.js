@@ -22,8 +22,8 @@ var createPaymentRequest = function (gateway) {
 					window.nfWCType = gateway;
 					//NoFrixionStorage.setItem('paymentRequestID', response.data.paymentRequestId, 90);
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-cardNumber',
-						'nf-cardSecurityCode', 'nf-error', NoFrixionWP.apiUrl);
+					window.nfPayElement = new NoFrixionPayElementHeadless(window.nfWCpaymentRequestID, 'nf-number-container',
+						'nf-securityCode-container', 'nf-error', NoFrixionWP.apiUrl);
 					window.nfPayElement.load();
 					jQuery('form[name="checkout"]').append('<input type="hidden" name="payment_request_id" value="' + window.nfWCpaymentRequestID + '" />');
 					console.log(response);
@@ -113,8 +113,8 @@ var createPaymentRequestAuthorizeCard = function () {
 					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
 					window.nfPayElement = new NoFrixionPayElementHeadless(
 						window.nfWCpaymentRequestID,
-						'nf-cardNumber',
-						'nf-cardSecurityCode',
+						'nf-number-container',
+						'nf-securityCode-container',
 						'nf-error',
 						NoFrixionWP.apiUrl
 					);
@@ -419,7 +419,7 @@ var handleStoredTokens = function () {
 			// At least one payment token available, if selected hide the CC form.
 			// If one is selected by default, hide the CC form.
 			if (jQuery('li.woocommerce-SavedPaymentMethods-token input[type="radio"]:checked').length > 0) {
-				togglePaymentForm(true);
+				//togglePaymentForm(true);
 			}
 		} else {
 			// Saved payment methods present but no tokens yet. CC form shown.

@@ -52,67 +52,48 @@ class NoFrixionCard extends NoFrixionGateway {
 
 			<form id="nf-cardPaymentForm" onsubmit="event.preventDefault();">
 
-						<div class="form-row form-row-wide">
+				<div class="form-row form-row-wide">
 
-							<label for="nf-cardNumber">Card Number <span class="required">*</span></label>
-
-								<input style="border: 1px solid lightgray !important;
-								height: 33px !important;
-								padding: 8px !important;
-								margin: 5px 0 5px 0 !important;
-								width: 100% !important;
-								background: white !important;
-								font-size: 16px !important;
-								box-shadow: none;" type="text" id="nf-cardNumber" name="nf-cardNumber" placeholder="0000 0000 0000 0000" size="24" maxlength="24" inputmode="numeric" />
-						</div>
-
-			<div style="margin: 10px 0 80px 0;">
-
-				<div class="form-row form-row-first" style="vertical-align: top;">
-
-					<label>Expiry Date <span class="required">*</span></label>
-
-					<div style="width: 100% !important;">
-
-					<input style="border: 1px solid lightgray !important;
-					height: 33px !important;
-					padding: 8px !important;
-					margin: 5px 0 5px 0 !important;
-					width: 40% !important;
-					background: white !important;
-					font-size: 16px !important;
-					box-shadow: none;" type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
-
-					<span style="width: 10% !important;" class="input-group-text">/</span>
-
-					<input style="border: 1px solid lightgray !important;
-					height: 33px !important;
-					padding: 8px !important;
-					margin: 5px 0 5px 0 !important;
-					width: 50% !important;
-					background: white !important;
-					font-size: 16px !important;
-					box-shadow: none;" type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
-
-					</div>
-
+					<label for="nf-cardNumber">Card Number <span class="required">*</span></label>
+					<div id="nf-number-container" class="nf-form-control nf-border-radius" style="height:38px; border-radius: 0.25rem;"></div>
 				</div>
 
-				<div class="form-row form-row-last">
-					<label for="nf-cardSecurityCode">Card Code (CVC) <span class="required">*</span></label>
+				<div style="margin: 10px 0 80px 0;">
 
-					<div id="nf-securityCode-container" class="form-control nf-border-radius">
+					<div class="form-row form-row-first" style="vertical-align: top;">
+
+						<label>Expiry Date <span class="required">*</span></label>
+
+						<div style="width: 100% !important;">
+
 						<input style="border: 1px solid lightgray !important;
 						height: 33px !important;
 						padding: 8px !important;
 						margin: 5px 0 5px 0 !important;
-						width: 100% !important;
+						width: 40% !important;
 						background: white !important;
 						font-size: 16px !important;
-						box-shadow: none;" type="text" id="nf-cardSecurityCode" name="nf-cardSecurityCode" placeholder="CVC" size="5" maxlength="5" inputmode="numeric" />
+						box-shadow: none;" type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
+
+						<span style="width: 10% !important;" class="input-group-text">/</span>
+
+						<input style="border: 1px solid lightgray !important;
+						height: 33px !important;
+						padding: 8px !important;
+						margin: 5px 0 5px 0 !important;
+						width: 50% !important;
+						background: white !important;
+						font-size: 16px !important;
+						box-shadow: none;" type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
+
+						</div>
+
 					</div>
 
-				</div>
+					<div class="form-row form-row-last">
+						<label for="nf-cardSecurityCode">Card Code (CVC) <span class="required">*</span></label>
+						<div id="nf-securityCode-container" class="nf-form-control nf-border-radius" style="height:38px; border-radius: 0.25rem;" />
+					</div>
 				</div>
 			</form>
 

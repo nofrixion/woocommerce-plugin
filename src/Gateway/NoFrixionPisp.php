@@ -13,8 +13,10 @@ class NoFrixionPisp extends NoFrixionGateway {
 	public ApiHelper $apiHelper;
 
 	public static array $providers = [
-		'rb' => 'H120000002',
-		'lloyds' => 'H120000001'
+		'aib' => 'aib',
+		'revolut' => 'revolut_eu',
+		'boi' => 'bankofireland',
+		'ptsb' => 'permanent-tsb',
 	];
 
 	public function __construct() {
@@ -38,10 +40,16 @@ class NoFrixionPisp extends NoFrixionGateway {
 		// Todo: get the fields from api endpoint.
 		echo "
 			<div class='row'>
-				<input type='radio' value='rb' name='wc-pisp-provider' id='wc-pisp-rb' /><label for='wc-pisp-rb'>Royal Bank of Scotland</label>
+				<input type='radio' value='revolut' name='wc-pisp-provider' id='wc-pisp-revolut' /><label for='wc-pisp-revolut'>Revolut</label>
 			</div>
 			<div class='row'>
-				<input type='radio' value='lloyds' name='wc-pisp-provider' id='wc-pisp-lloyds' /><label for='wc-pisp-lloyds'>Lloyds</label>
+				<input type='radio' value='aib' name='wc-pisp-provider' id='wc-pisp-aib' /><label for='wc-pisp-aib'>Allied Irish Bank</label>
+			</div>
+			<div class='row'>
+				<input type='radio' value='boi' name='wc-pisp-provider' id='wc-pisp-boi' /><label for='wc-pisp-boi'>Bank of Ireland</label>
+			</div>
+			<div class='row'>
+				<input type='radio' value='ptsb' name='wc-pisp-provider' id='wc-pisp-ptsb' /><label for='wc-pisp-ptsb'>Permanent TSB</label>
 			</div>
 		";
 	}
