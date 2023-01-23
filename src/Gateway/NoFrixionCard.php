@@ -66,25 +66,25 @@ class NoFrixionCard extends NoFrixionGateway {
 
 						<div style="width: 100% !important;">
 
-						<input style="border: 1px solid lightgray !important;
-						height: 33px !important;
-						padding: 8px !important;
-						margin: 5px 0 5px 0 !important;
-						width: 40% !important;
-						background: white !important;
-						font-size: 16px !important;
-						box-shadow: none;" type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
+							<input style="border: 1px solid lightgray !important;
+							height: 33px !important;
+							padding: 8px !important;
+							margin: 5px 0 5px 0 !important;
+							width: 40% !important;
+							background: white !important;
+							font-size: 16px !important;
+							box-shadow: none;" type="text" id="nf-expiryMonth" placeholder="MM" size="2" maxlength="2" inputmode="numeric" />
 
-						<span style="width: 10% !important;" class="input-group-text">/</span>
+							<span style="width: 10% !important;" class="input-group-text">/</span>
 
-						<input style="border: 1px solid lightgray !important;
-						height: 33px !important;
-						padding: 8px !important;
-						margin: 5px 0 5px 0 !important;
-						width: 50% !important;
-						background: white !important;
-						font-size: 16px !important;
-						box-shadow: none;" type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
+							<input style="border: 1px solid lightgray !important;
+							height: 33px !important;
+							padding: 8px !important;
+							margin: 5px 0 5px 0 !important;
+							width: 50% !important;
+							background: white !important;
+							font-size: 16px !important;
+							box-shadow: none;" type="text" id="nf-expiryYear" placeholder="YYYY" size="4" maxlength="4" inputmode="numeric" />
 
 						</div>
 
@@ -92,7 +92,7 @@ class NoFrixionCard extends NoFrixionGateway {
 
 					<div class="form-row form-row-last">
 						<label for="nf-cardSecurityCode">Card Code (CVC) <span class="required">*</span></label>
-						<div id="nf-securityCode-container" class="nf-form-control nf-border-radius" style="height:38px; border-radius: 0.25rem;" />
+						<div id="nf-securityCode-container" class="nf-form-control nf-border-radius" style="height:38px; border-radius: 0.25rem;"></div>
 					</div>
 				</div>
 			</form>

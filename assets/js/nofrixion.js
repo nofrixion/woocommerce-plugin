@@ -419,7 +419,7 @@ var handleStoredTokens = function () {
 			// At least one payment token available, if selected hide the CC form.
 			// If one is selected by default, hide the CC form.
 			if (jQuery('li.woocommerce-SavedPaymentMethods-token input[type="radio"]:checked').length > 0) {
-				//togglePaymentForm(true);
+				togglePaymentForm(true);
 			}
 		} else {
 			// Saved payment methods present but no tokens yet. CC form shown.
