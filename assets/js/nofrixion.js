@@ -211,14 +211,27 @@ var processPaymentRequestOrder = function () {
 var submitPayFrame = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe');
+
 	if (processPaymentRequestOrder()) {
 		console.log('Trigger submitting nofrixion form to api.');
 		blockElement('.woocommerce-checkout-payment');
-		nfpayByCard();
+		makeCardPayment();
 	}
 
 	return false;
 };
+
+/**
+ * Make sure the nfpayByCard() function can't get triggered multiple times in one request/click handler.
+ */
+var makeCardPayment = function() {
+	if ((window.nfWCLastRun + window.nfWCDelay) < Date.now()){
+		window.nfWCLastRun = Date.now()
+		console.log('Executing nfpayByCard()');
+		nfpayByCard();
+	}
+}
+
 
 /**
  * Trigger payframe button submit.
@@ -268,7 +281,7 @@ var unblockElement = function (cssClass) {
 var submitPayFrameChangePM = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe (change pm)');
-	nfpayByCard();
+	makeCardPayment();
 	return false;
 };
 
@@ -278,7 +291,7 @@ var submitPayFrameChangePM = function (e) {
 var submitPayFrameAuthorizeCard = function (e) {
 	e.preventDefault();
 	console.log('Triggered submit payframe (authorize card)');
-	nfpayByCard();
+	makeCardPayment();
 	return false;
 };
 
@@ -457,6 +470,10 @@ var togglePaymentForm = function (hide = true) {
  * Main entry point.
  */
 jQuery(function ($) {
+	// Global variables.
+	window.nfWCDelay = 3000;
+	window.nfWCLastRun = 0;
+
 	// Listen on Update cart and change of payment methods.
 	$('body').on('init_checkout updated_checkout payment_method_selected', function (event) {
 		console.log('Fired event: ' + event.type);
