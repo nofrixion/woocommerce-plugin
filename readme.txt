@@ -28,6 +28,8 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
+= 1.1.29 :: 2023-02-03 =
+Fix for duplicate card payment authorisations.
 = 1.1.28 :: 2023-01-23 =
 Fix for disappearing card payment fields.
 = 1.1.27 :: 2023-01-20 =
