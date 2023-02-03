@@ -45,7 +45,6 @@ class NoFrixionWCPlugin {
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request_authorize_card', [$this, 'processAjaxPaymentRequestAuthorizeCard'] );
 		add_action( 'wp_ajax_nofrixion_payment_request', [$this, 'processAjaxPaymentRequestOrder'] );
 		add_action( 'wp_ajax_nopriv_nofrixion_payment_request', [$this, 'processAjaxPaymentRequestOrder'] );
-		add_filter( 'wp_enqueue_scripts', [$this, 'addScripts']);
 
 		if (is_admin()) {
 			// Register our custom global settings page.
@@ -386,10 +385,39 @@ class NoFrixionWCPlugin {
 							$order->payment_complete();
 							$order->save();
 							break;
+						case "OverPaid":
+							$order->payment_complete();
+							$order->add_order_note( _x( 'ATTENTION.', 'nofrixion-for-woocommerce' ) );
+							$order->save();
+							self::sendAdminMail(
+								_x("The order $order_id has been overpaid and needs manual checking.", 'nofrixion-for-woocommerce'),
+								$order
+							);
+							break;
 						case "Voided":
 							$order->update_status( 'failed' );
-							$order->add_order_note( _x( 'Payment failed, please make a new order or get in contact with us.', 'nofrixion-for-woocommerce' ) );
+							$order->add_order_note( _x( 'Payment failed, please make a new order or get in contact with us.', 'nofrixion-for-woocommerce' ), 1);
 							$order->save();
+							break;
+						case "PartiallyPaid":
+							// Put the order on-hold for manual investigation by merchant.
+							$order->update_status( 'on-hold' );
+							$order->add_order_note( _x( 'Partial payment received, order needs manual processing.', 'nofrixion-for-woocommerce' ) );
+							$order->save();
+							self::sendAdminMail(
+								_x("The order $order_id has been partially paid and needs manual checking.", 'nofrixion-for-woocommerce'),
+								$order
+							);
+							break;
+						case "Authorized":
+							// Put the order on-hold for manual investigation by merchant.
+							$order->update_status( 'on-hold' );
+							$order->add_order_note( _x( 'Authorization received (no payments processed), order needs manual processing.', 'nofrixion-for-woocommerce' ) );
+							$order->save();
+							self::sendAdminMail(
+								_x("The payment of order $order_id has been authorized only and needs manual checking.", 'nofrixion-for-woocommerce'),
+								$order
+							);
 							break;
 						case "None":
 							// Do nothing, keeps order in pending state.
@@ -432,6 +460,8 @@ class NoFrixionWCPlugin {
 		switch ($status)
 		{
 			case 'on-hold':
+				$statusDesc = _x('There was a problem finishing your order, order now on hold, we will get in contact with you.', 'nofrixion-for-woocommerce');
+				break;
 			case 'pending':
 				$statusDesc = _x('Waiting for payment settlement', 'nofrixion-for-woocommerce');
 				break;
@@ -459,12 +489,23 @@ class NoFrixionWCPlugin {
 		";
 	}
 
+	/**
+	 * Helper for sending mails to store staff.
+	 */
+	public static function sendAdminMail(string $message, WC_Order $order = null) {
+		if ($mails = get_option( 'nofrixion_admin_mails', null )) {
+			// Remove whitespaces.
+			$mails = preg_replace('/\s+/', '', $mails);
 
-	public function addScripts() {
-		// Not needed for now:
-		// todo: remove incl files if of no use.
-		// wp_register_style( 'nofrixion-style', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css' );
-		// wp_enqueue_style( 'nofrixion-style' );
+			// Add a link to the order.
+			$message .= "\n\n";
+			$message .= "Order ID: " . $order->get_order_number() . "\n";
+			$message .= "Link: " . $order->get_edit_order_url() . "\n";
+
+			return wp_mail( $mails, 'NoFrixion for WooCommerce Alert', $message);
+		}
+
+		return false;
 	}
 
 	/**

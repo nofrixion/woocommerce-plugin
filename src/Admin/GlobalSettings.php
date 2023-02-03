@@ -57,6 +57,13 @@ class GlobalSettings extends \WC_Settings_Page {
 				'default' => '',
 				'id'      => 'nofrixion_token'
 			],
+			'mails'    => [
+				'title'   => esc_html_x( 'Admin notification emails', 'global_settings', 'nofrixion-for-woocommerce' ),
+				'type'    => 'text',
+				'desc'    => _x( 'Comma-separated list of email addresses that should get notifications in case of problems during payment processing', 'global_settings', 'nofrixion-for-woocommerce' ),
+				'default' => get_option('admin_email'),
+				'id'      => 'nofrixion_admin_mails'
+			],
 			'debug'      => [
 				'title'   => __( 'Debug Log', 'nofrixion-for-woocommerce' ),
 				'type'    => 'checkbox',
