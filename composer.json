@@ -9,11 +9,14 @@
   },
   "authors": [
     {
+      "name": "NoFrixion Development Team"
+    },
+    {
       "name": "Andreas Tasch",
       "email": "andy.tasch@gmail.com"
     }
   ],
   "require": {
-    "nofrixion/moneymoov-php": "^1.0"
+    "nofrixion/moneymoov-php": "dev-PLU18-add-payment-request-models as 3.0.0"
   }
 }
