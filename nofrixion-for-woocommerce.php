@@ -12,13 +12,13 @@
  * Tested up to:    6.1 * Requires at least: 5.2
  */
 
-use NoFrixion\Client\PaymentRequestClient;
+use Nofrixion\Client\PaymentRequestClient;
 use Nofrixion\Model\PaymentRequests\PaymentRequestCreate;
 use Nofrixion\Model\PaymentRequests\PaymentRequestUpdate;
-use NoFrixion\Util\PreciseNumber;
-use NoFrixion\WC\Helper\ApiHelper;
-use NoFrixion\WC\Helper\Logger;
-use NoFrixion\WC\Helper\TokenManager;
+use Nofrixion\Util\PreciseNumber;
+use Nofrixion\WC\Helper\ApiHelper;
+use Nofrixion\WC\Helper\Logger;
+use Nofrixion\WC\Helper\TokenManager;
 
 defined( 'ABSPATH' ) || exit();
 define( 'NOFRIXION_VERSION', '1.2.0' );
@@ -26,7 +26,7 @@ define( 'NOFRIXION_PLUGIN_FILE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'NOFRIXION_PLUGIN_URL', plugin_dir_url(__FILE__ ) );
 define( 'NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce' );
 
-class NoFrixionWCPlugin {
+class NofrixionWCPlugin {
 
 	const SESSION_PAYMENTREQUEST_ID = 'nofrixion_payment_request_id';
 	const CALLBACK_PM_CHANGE = 'order-payment-method-change';
@@ -53,7 +53,7 @@ class NoFrixionWCPlugin {
 			add_filter(
 				'woocommerce_get_settings_pages',
 				function ($settings) {
-					$settings[] = new \NoFrixion\WC\Admin\GlobalSettings();
+					$settings[] = new \Nofrixion\WC\Admin\GlobalSettings();
 
 					return $settings;
 				}
@@ -78,9 +78,9 @@ class NoFrixionWCPlugin {
 	}
 
 	public static function initPaymentGateways($gateways): array {
-		// Add NoFrixion gateway to WooCommerce.
-		$gateways[] = \NoFrixion\WC\Gateway\NoFrixionCard::class;
-		$gateways[] = \NoFrixion\WC\Gateway\NoFrixionPisp::class;
+		// Add Nofrixion gateway to WooCommerce.
+		$gateways[] = \Nofrixion\WC\Gateway\NofrixionCard::class;
+		$gateways[] = \Nofrixion\WC\Gateway\NofrixionPisp::class;
 
 		return $gateways;
 	}
@@ -100,7 +100,7 @@ class NoFrixionWCPlugin {
 				'</a>'
 			);
 
-			\NoFrixion\WC\Admin\Notice::addNotice('error', $message);
+			\Nofrixion\WC\Admin\Notice::addNotice('error', $message);
 		}
 	}
 
@@ -111,13 +111,13 @@ class NoFrixionWCPlugin {
 		// Check PHP version.
 		if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 			$versionMessage = sprintf( __( 'Your PHP version is %s but the NoFrixion Payment plugin requires version 7.4+.', 'nofrixion-for-woocommerce' ), PHP_VERSION );
-			\NoFrixion\WC\Admin\Notice::addNotice('error', $versionMessage);
+			\Nofrixion\WC\Admin\Notice::addNotice('error', $versionMessage);
 		}
 
 		// Check if WooCommerce is installed.
 		if ( ! is_plugin_active('woocommerce/woocommerce.php') ) {
 			$wcMessage = __('WooCommerce does not seem to be installed. You need to install it before you can activate NoFrixion Payment Gateway.', 'nofrixion-for-woocommerce');
-			\NoFrixion\WC\Admin\Notice::addNotice('error', $wcMessage);
+			\Nofrixion\WC\Admin\Notice::addNotice('error', $wcMessage);
 		}
 
 	}
@@ -191,7 +191,7 @@ class NoFrixionWCPlugin {
 		$orderId = wc_sanitize_order_id($_POST['orderId']);
 
 
-		$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_PM_CHANGE .'&';
+		$callbackUrl = site_url() . '/?'. NofrixionWCPlugin::CALLBACK_PM_CHANGE .'&';
 		$callbackUrl .= 'orderId=' . $orderId;
 
 		try {
@@ -222,8 +222,8 @@ class NoFrixionWCPlugin {
 
 			Logger::debug('Result creating PR for payment method change: ' . print_r($result, true));
 
-			update_post_meta($orderId, 'NoFrixion_pmupdate_PrId', $result->id);
-			update_post_meta($orderId, 'NoFrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
+			update_post_meta($orderId, 'Nofrixion_pmupdate_PrId', $result->id);
+			update_post_meta($orderId, 'Nofrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
 
 			wp_send_json_success(
 				[
@@ -296,7 +296,7 @@ class NoFrixionWCPlugin {
 
 			$result = $client->createPaymentRequest($newPr);
 
-			$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_AUTH_CARD .'&';
+			$callbackUrl = site_url() . '/?'. NofrixionWCPlugin::CALLBACK_AUTH_CARD .'&';
 			$callbackUrl .= 'authReqId=' . $result->id;
 
 			if ($result) {
@@ -306,7 +306,7 @@ class NoFrixionWCPlugin {
 			}
 
 			// Store the prId on the user as we do not have any order for this use case.
-			update_user_meta(get_current_user_id(), 'NoFrixion_authorizeCard_prId', $result->id);
+			update_user_meta(get_current_user_id(), 'Nofrixion_authorizeCard_prId', $result->id);
 
 			// Update PR with callback URL.
 			$updatedPr = new PaymentRequestUpdate;
@@ -361,9 +361,9 @@ class NoFrixionWCPlugin {
 		Logger::debug('Entering orderStatusThankYouPage:');
 
 		$currentOrderStatus = $order->get_status();
-		$paymentRequestID = $order->get_meta('NoFrixion_id');
-		$isSubscription = (bool) $order->get_meta('NoFrixion_isSubscription');
-		$saveToken = (bool) $order->get_meta('NoFrixion_saveTokenSelected');
+		$paymentRequestID = $order->get_meta('Nofrixion_id');
+		$isSubscription = (bool) $order->get_meta('Nofrixion_isSubscription');
+		$saveToken = (bool) $order->get_meta('Nofrixion_saveTokenSelected');
 
 		// Only process payment status if not already done.
 		if (
@@ -441,10 +441,10 @@ class NoFrixionWCPlugin {
 
 						// For subscriptions, also store the tokenisedCardId on the order for recurring charges.
 						if ($isSubscription) {
-							$order->update_meta_data('NoFrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
-							$order->update_meta_data('NoFrixion_cardTransactionID', $payment['cardTransactionID'] );
-							$order->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
-							$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
+							$order->update_meta_data('Nofrixion_cardTokenCustomerID', $payment['cardTokenCustomerID'] );
+							$order->update_meta_data('Nofrixion_cardTransactionID', $payment['cardTransactionID'] );
+							$order->update_meta_data( 'Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+							$order->update_meta_data( 'Nofrixion_tokenisedCard_id', $tokenizedCard['id'] );
 							$order->add_order_note( _x('Received card token for future charges of a subscription.', 'nofrixion-for-woocommerce'));
 							$order->save();
 						}
@@ -516,7 +516,7 @@ class NoFrixionWCPlugin {
 	 *
 	 * Ensures only one instance can be loaded.
 	 *
-	 * @return \NoFrixionWCPlugin
+	 * @return \NofrixionWCPlugin
 	 */
 	public static function instance() {
 
@@ -530,7 +530,7 @@ class NoFrixionWCPlugin {
 
 // Start everything up.
 function init_nofrixion() {
-	\NoFrixionWCPlugin::instance();
+	\NofrixionWCPlugin::instance();
 
 	nofrixion_ensure_endpoints();
 }
@@ -540,8 +540,8 @@ function init_nofrixion() {
  */
 add_action('init', function() {
 	// Register custom endpoints.
-	add_rewrite_endpoint(NoFrixionWCPlugin::CALLBACK_PM_CHANGE, EP_ROOT);
-	add_rewrite_endpoint(NoFrixionWCPlugin::CALLBACK_AUTH_CARD, EP_ROOT);
+	add_rewrite_endpoint(NofrixionWCPlugin::CALLBACK_PM_CHANGE, EP_ROOT);
+	add_rewrite_endpoint(NofrixionWCPlugin::CALLBACK_AUTH_CARD, EP_ROOT);
 
 	// Adding textdomain and translation support.
 	load_plugin_textdomain('nofrixion-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/');
@@ -550,8 +550,8 @@ add_action('init', function() {
 // To be able to use the endpoint without appended url segments we need to do this.
 add_filter('request', function($vars) {
 	$callbacks = [
-		NoFrixionWCPlugin::CALLBACK_PM_CHANGE,
-		NoFrixionWCPlugin::CALLBACK_AUTH_CARD
+		NofrixionWCPlugin::CALLBACK_PM_CHANGE,
+		NofrixionWCPlugin::CALLBACK_AUTH_CARD
 	];
 	foreach ($callbacks as $cb) {
 		if (isset($vars[$cb])) {
@@ -567,7 +567,7 @@ add_action( 'template_redirect', function() {
 	global $wp_query;
 
 	// Only continue on correct request.
-	if ( ! isset( $wp_query->query_vars[ NoFrixionWCPlugin::CALLBACK_PM_CHANGE ] ) ) {
+	if ( ! isset( $wp_query->query_vars[ NofrixionWCPlugin::CALLBACK_PM_CHANGE ] ) ) {
 		return;
 	}
 
@@ -580,7 +580,7 @@ add_action( 'template_redirect', function() {
 		wp_die('Could not load order, aborting');
 	}
 
-	if (! $updatedPrId = $subscription->get_meta('NoFrixion_pmupdate_PrId')) {
+	if (! $updatedPrId = $subscription->get_meta('Nofrixion_pmupdate_PrId')) {
 		Logger::debug('Order ' . $subscriptionId . ' has no pmupdatePrId set, aborting.');
 		wp_die('Could not find update payment method reference, aborting');
 	}
@@ -614,13 +614,13 @@ add_action( 'template_redirect', function() {
 		// Update order status?
 		if ($tokenizedCard && $paymentStatus === 'FullyPaid') {
 			// Save tokenized card id on current and parent order.
-			$subscription->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
-			$subscription->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
+			$subscription->update_meta_data( 'Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+			$subscription->update_meta_data( 'Nofrixion_tokenisedCard_id', $tokenizedCard['id'] );
 			$subscription->save();
 			$subscription->add_order_note( __('Received card token for future charges of a subscription, updated parent order.', 'nofrixion-for-woocommerce'));
-			$parentOrder->update_meta_data( 'NoFrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
-			$parentOrder->update_meta_data( 'NoFrixion_tokenisedCard_id', $tokenizedCard['id'] );
-			$parentOrder->update_meta_data('NoFrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
+			$parentOrder->update_meta_data( 'Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID'] );
+			$parentOrder->update_meta_data( 'Nofrixion_tokenisedCard_id', $tokenizedCard['id'] );
+			$parentOrder->update_meta_data('Nofrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
 			$parentOrder->save();
 			$parentOrder->add_order_note( sprintf(__('Updated card token after payment method change by order/subscription id %u.', 'nofrixion-for-woocommerce'), $subscriptionId));
 			Logger::debug('Updated order and parent order with new tokenised card details.');
@@ -651,7 +651,7 @@ add_action( 'template_redirect', function() {
 	global $wp_query;
 
 	// Only continue correct request.
-	if ( ! isset( $wp_query->query_vars[ NoFrixionWCPlugin::CALLBACK_AUTH_CARD ] ) ) {
+	if ( ! isset( $wp_query->query_vars[ NofrixionWCPlugin::CALLBACK_AUTH_CARD ] ) ) {
 		return;
 	}
 
@@ -718,5 +718,5 @@ register_activation_hook( __FILE__, function() {
 });
 
 // Initialize payment gateways and plugin.
-add_filter( 'woocommerce_payment_gateways', [ 'NoFrixionWCPlugin', 'initPaymentGateways' ] );
+add_filter( 'woocommerce_payment_gateways', [ 'NofrixionWCPlugin', 'initPaymentGateways' ] );
 add_action( 'plugins_loaded', 'init_nofrixion', 0 );

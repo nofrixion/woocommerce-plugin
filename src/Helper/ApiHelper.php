@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Helper;
+namespace Nofrixion\WC\Helper;
 
 class ApiHelper {
 	public const API_URL = [

@@ -2,11 +2,11 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Gateway;
+namespace Nofrixion\WC\Gateway;
 
-use NoFrixion\WC\Helper\ApiHelper;
+use Nofrixion\WC\Helper\ApiHelper;
 
-class NoFrixionCard extends NoFrixionGateway {
+class NofrixionCard extends NofrixionGateway {
 
 	public ApiHelper $apiHelper;
 

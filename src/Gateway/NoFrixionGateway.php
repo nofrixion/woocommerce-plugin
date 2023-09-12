@@ -2,18 +2,18 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Gateway;
+namespace Nofrixion\WC\Gateway;
 
-use NoFrixion\Client\PaymentRequestClient;
+use Nofrixion\Client\PaymentRequestClient;
 use Nofrixion\Model\PaymentRequests\PaymentRequestCreate;
 use Nofrixion\Model\PaymentRequests\PaymentRequest;
 use Nofrixion\Model\PaymentRequests\PaymentRequestUpdate;
-use NoFrixion\WC\Helper\ApiHelper;
-use NoFrixion\WC\Helper\Logger;
-use NoFrixion\WC\Helper\OrderStates;
-use NoFrixion\Util\PreciseNumber;
+use Nofrixion\WC\Helper\ApiHelper;
+use Nofrixion\WC\Helper\Logger;
+use Nofrixion\WC\Helper\OrderStates;
+use Nofrixion\Util\PreciseNumber;
 
-abstract class NoFrixionGateway extends \WC_Payment_Gateway {
+abstract class NofrixionGateway extends \WC_Payment_Gateway {
 
 	public ApiHelper $apiHelper;
 
@@ -122,7 +122,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$createToken = false;
 		Logger::debug('New payment method/save token checkbox : ' . isset($_POST[$newPaymentMethodFieldName]));
 		if (isset($_POST[$newPaymentMethodFieldName])) {
-			$order->add_meta_data('NoFrixion_saveTokenSelected', 1);
+			$order->add_meta_data('Nofrixion_saveTokenSelected', 1);
 			$order->save();
 			$createToken = true;
 		}
@@ -185,11 +185,11 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			// Try to pay with the saved token.
 			$paywithTokenResult = $this->payWithToken($paymentRequestId, $token);
 			if ($paywithTokenResult) {
-				$order->update_meta_data('NoFrixion_tokenpayment_status', $paywithTokenResult['status']);
-				$order->update_meta_data('NoFrixion_tokenpayment_authorizedAmount', $paywithTokenResult['authorizedAmount']);
-				$order->update_meta_data('NoFrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
-				$order->update_meta_data('NoFrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
-				$order->update_meta_data( 'NoFrixion_tokenisedCard_id', $token->get_token() );
+				$order->update_meta_data('Nofrixion_tokenpayment_status', $paywithTokenResult['status']);
+				$order->update_meta_data('Nofrixion_tokenpayment_authorizedAmount', $paywithTokenResult['authorizedAmount']);
+				$order->update_meta_data('Nofrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
+				$order->update_meta_data('Nofrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
+				$order->update_meta_data( 'Nofrixion_tokenisedCard_id', $token->get_token() );
 				$order->save();
 
 				Logger::debug('Successfully paid with existing token: ' . print_r($paywithTokenResult, true));
@@ -323,9 +323,9 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 					wp_die('No NoFrixion invoiceId provided, aborting.');
 				}
 
-				// Load the order by metadata field NoFrixion_id
+				// Load the order by metadata field Nofrixion_id
 				$orders = wc_get_orders([
-					'meta_key' => 'NoFrixion_id',
+					'meta_key' => 'Nofrixion_id',
 					'meta_value' => $postData->invoiceId
 				]);
 
@@ -430,8 +430,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	 * @return mixed Returns false if no valid invoice found or the invoice id.
 	 */
 	protected function validInvoiceExists( int $orderId ): bool {
-		// Check order metadata for NoFrixion_id.
-		if ( $invoiceId = get_post_meta( $orderId, 'NoFrixion_id', true ) ) {
+		// Check order metadata for Nofrixion_id.
+		if ( $invoiceId = get_post_meta( $orderId, 'Nofrixion_id', true ) ) {
 			// Validate the order status on NoFrixion server.
 			$client = new Invoice( $this->apiHelper->url, $this->apiHelper->apiKey );
 			try {
@@ -464,26 +464,26 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		// Load payment data from API.
 		try {
 			$client = new Invoice( $this->apiHelper->url, $this->apiHelper->apiKey );
-			$allPaymentData = $client->getPaymentMethods($this->apiHelper->storeId, $order->get_meta('NoFrixion_id'));
+			$allPaymentData = $client->getPaymentMethods($this->apiHelper->storeId, $order->get_meta('Nofrixion_id'));
 
 			foreach ($allPaymentData as $payment) {
 				// Only continue if the payment method has payments made.
 				if ((float) $payment->getTotalPaid() > 0.0) {
 					$paymentMethod = $payment->getPaymentMethod();
 					// Update order meta data.
-					update_post_meta( $order->get_id(), "NoFrixion_{$paymentMethod}_destination", $payment->getDestination() ?? '' );
-					update_post_meta( $order->get_id(), "NoFrixion_{$paymentMethod}_amount", $payment->getAmount() ?? '' );
-					update_post_meta( $order->get_id(), "NoFrixion_{$paymentMethod}_paid", $payment->getTotalPaid() ?? '' );
-					update_post_meta( $order->get_id(), "NoFrixion_{$paymentMethod}_networkFee", $payment->getNetworkFee() ?? '' );
-					update_post_meta( $order->get_id(), "NoFrixion_{$paymentMethod}_rate", $payment->getRate() ?? '' );
+					update_post_meta( $order->get_id(), "Nofrixion_{$paymentMethod}_destination", $payment->getDestination() ?? '' );
+					update_post_meta( $order->get_id(), "Nofrixion_{$paymentMethod}_amount", $payment->getAmount() ?? '' );
+					update_post_meta( $order->get_id(), "Nofrixion_{$paymentMethod}_paid", $payment->getTotalPaid() ?? '' );
+					update_post_meta( $order->get_id(), "Nofrixion_{$paymentMethod}_networkFee", $payment->getNetworkFee() ?? '' );
+					update_post_meta( $order->get_id(), "Nofrixion_{$paymentMethod}_rate", $payment->getRate() ?? '' );
 					if ((float) $payment->getRate() > 0.0) {
 						$formattedRate = number_format((float) $payment->getRate(), wc_get_price_decimals(), wc_get_price_decimal_separator(), wc_get_price_thousand_separator());
-						update_post_meta( $order->get_id(), "NoFrixion_{$paymentMethod}_rateFormatted", $formattedRate );
+						update_post_meta( $order->get_id(), "Nofrixion_{$paymentMethod}_rateFormatted", $formattedRate );
 					}
 				}
 			}
 		} catch (\Throwable $e) {
-			Logger::debug( 'Error processing payment data for invoice: ' . $order->get_meta('NoFrixion_id') . ' and order ID: ' . $order->get_id() );
+			Logger::debug( 'Error processing payment data for invoice: ' . $order->get_meta('Nofrixion_id') . ' and order ID: ' . $order->get_id() );
 			Logger::debug($e->getMessage());
 		}
 	}
@@ -629,9 +629,9 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	 * References WC order metadata with NoFrixion payment request data.
 	 */
 	protected function updateOrderMetadata( int $orderId, array $paymentRequest ) {
-		update_post_meta( $orderId, 'NoFrixion_id', $paymentRequest['id'] );
-		update_post_meta( $orderId, 'NoFrixion_isSubscription', $paymentRequest['cardCreateToken'] ? 1 : 0);
-		update_post_meta( $orderId, 'NoFrixion_CustomerID', $paymentRequest['customerID'] ?? '');
+		update_post_meta( $orderId, 'Nofrixion_id', $paymentRequest['id'] );
+		update_post_meta( $orderId, 'Nofrixion_isSubscription', $paymentRequest['cardCreateToken'] ? 1 : 0);
+		update_post_meta( $orderId, 'Nofrixion_CustomerID', $paymentRequest['customerID'] ?? '');
 	}
 
 	public function isChangingPaymentMethodForSubscription() {
@@ -661,7 +661,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 			return ['result' => 'failure'];
 		}
 
-		if (!($tokenisedCardId = $parentOrder->get_meta('NoFrixion_tokenisedCard_id'))) {
+		if (!($tokenisedCardId = $parentOrder->get_meta('Nofrixion_tokenisedCard_id'))) {
 			Logger::debug('Subs: Failed to load tokenisedCard_id from order: ' . $parentOrderId, true);
 			$renewalOrder->update_status('failed', $failedMsg);
 			return ['result' => 'failure'];
@@ -702,8 +702,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$orderNumber
 			);
 			*/
-			$renewalOrder->update_meta_data('NoFrixion_isSubscription',1);
-			$renewalOrder->update_meta_data('NoFrixion_tokenisedCard_id', $tokenisedCardId);
+			$renewalOrder->update_meta_data('Nofrixion_isSubscription',1);
+			$renewalOrder->update_meta_data('Nofrixion_tokenisedCard_id', $tokenisedCardId);
 
 			Logger::debug('Subs: Successfully created new payment request: ' . print_r($paymentRequest, true));
 
@@ -719,9 +719,9 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$tokenisedCardId
 			);
 
-			$renewalOrder->update_meta_data('NoFrixion_renewal_status', $paywithTokenResult['status']);
-			$renewalOrder->update_meta_data('NoFrixion_renewal_authorizedAmount', $paywithTokenResult['authorizedAmount']);
-			$renewalOrder->update_meta_data('NoFrixion_renewal_transactionID', $paywithTokenResult['transactionID']);
+			$renewalOrder->update_meta_data('Nofrixion_renewal_status', $paywithTokenResult['status']);
+			$renewalOrder->update_meta_data('Nofrixion_renewal_authorizedAmount', $paywithTokenResult['authorizedAmount']);
+			$renewalOrder->update_meta_data('Nofrixion_renewal_transactionID', $paywithTokenResult['transactionID']);
 
 			Logger::debug('Subs: Successfully created pay with token request: ' . print_r($paywithTokenResult, true));
 
@@ -750,8 +750,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$subscription = wc_get_order($originalSubscription->id);
 		Logger::debug('$subscription: ' . print_r($subscription, true));
 		/*
-		$subscription->update_meta_data('NoFrixion_tokenisedCard_id', $renewalOrder->NoFrixion_tokenisedCard_id);
-		$subscription->update_meta_data('NoFrixion_id', $renewalOrder->NoFrixion_id);
+		$subscription->update_meta_data('Nofrixion_tokenisedCard_id', $renewalOrder->Nofrixion_tokenisedCard_id);
+		$subscription->update_meta_data('Nofrixion_id', $renewalOrder->Nofrixion_id);
 		$subscription->save();
 		*/
 	}

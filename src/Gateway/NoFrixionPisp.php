@@ -2,13 +2,13 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Gateway;
+namespace Nofrixion\WC\Gateway;
 
-use NoFrixion\Client\PaymentRequestClient;
-use NoFrixion\WC\Helper\ApiHelper;
-use NoFrixion\WC\Helper\Logger;
+use Nofrixion\Client\PaymentRequestClient;
+use Nofrixion\WC\Helper\ApiHelper;
+use Nofrixion\WC\Helper\Logger;
 
-class NoFrixionPisp extends NoFrixionGateway {
+class NofrixionPisp extends NofrixionGateway {
 
 	public ApiHelper $apiHelper;
 
@@ -95,7 +95,7 @@ class NoFrixionPisp extends NoFrixionGateway {
 
 		$pispProviderId = self::$providers[$pispProvider];
 
-		$order->add_meta_data('NoFrixion_pispProviderId', $pispProviderId);
+		$order->add_meta_data('Nofrixion_pispProviderId', $pispProviderId);
 		$order->save();
 
 		// Update the payment request with the final order data.

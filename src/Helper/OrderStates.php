@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Helper;
+namespace Nofrixion\WC\Helper;
 
 /**
  * Helper class to render the order_states as a custom field in global settings form.
