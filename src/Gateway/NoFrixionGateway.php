@@ -4,7 +4,10 @@ declare( strict_types=1 );
 
 namespace NoFrixion\WC\Gateway;
 
-use NoFrixion\Client\PaymentRequest;
+use NoFrixion\Client\PaymentRequestClient;
+use Nofrixion\Model\PaymentRequests\PaymentRequestCreate;
+use Nofrixion\Model\PaymentRequests\PaymentRequest;
+use Nofrixion\Model\PaymentRequests\PaymentRequestUpdate;
 use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
 use NoFrixion\WC\Helper\OrderStates;
@@ -488,7 +491,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	/**
 	 * Create an payment request on NoFrixion Server.
 	 */
-	public function createPaymentRequest( \WC_Order $order, bool $createToken = false ): ?array {
+	public function createPaymentRequest( \WC_Order $order, bool $createToken = false ): ?PaymentRequest {
 		Logger::debug('Entering createPaymentRequest()');
 		// In case some plugins customizing the order number we need to pass that along, defaults to internal ID.
 		$orderNumber = $order->get_order_number();
@@ -507,8 +510,20 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 
 		try {
-			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+			$client = new PaymentRequestClient( $this->apiHelper->url, $this->apiHelper->apiToken );
 
+			$newPr = new PaymentRequestCreate($amount->__toString());
+
+			$newPr->callbackUrl = $this->get_return_url($order);
+			$newPr->customerEmailAddress = $order->get_billing_email();
+			$newPr->currency = $currency;
+			$newPr->paymentMethodTypes = implode(',', [str_replace('nofrixion_', '', $this->getId())]);
+			$newPr->orderID = $orderNumber;
+			$newPr->cardCreateToken = $createToken;
+			$newPr->customerID = $createToken ? (string) $userId : null;
+
+			$paymentRequest = $client->createPaymentRequest($newPr);
+			/*
 			$paymentRequest = $client->createPaymentRequest(
 				'',
 				$this->get_return_url($order),
@@ -519,9 +534,10 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				$orderNumber,
 				$createToken,
 				$createToken ? (string) $userId : null,
-			);
+			); 
+			*/
 
-			$this->updateOrderMetadata( $order->get_id(), $paymentRequest );
+			$this->updateOrderMetadata( $order->get_id(), (array) $paymentRequest );
 
 			return $paymentRequest;
 
@@ -535,7 +551,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 	/**
 	 * Update payment request on NoFrixion Server.
 	 */
-	public function updatePaymentRequest(string $paymentRequestId, \WC_Order $order, bool $createToken = false ): ?array {
+	public function updatePaymentRequest(string $paymentRequestId, \WC_Order $order, bool $createToken = false ): ?PaymentRequest {
 		Logger::debug('Entering updatePaymentRequest()');
 		// In case some plugins customizing the order number we need to pass that along, defaults to internal ID.
 		$orderNumber = $order->get_order_number();
@@ -554,8 +570,20 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		}
 
 		try {
-			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+			$client = new PaymentRequestClient( $this->apiHelper->url, $this->apiHelper->apiToken );
 
+			$updatePr = new PaymentRequestUpdate();
+			$updatePr->callbackUrl = $this->get_return_url($order);
+			$updatePr->amount = $amount->__toString();
+			$updatePr->currency = $currency;
+			$updatePr->paymentMethodTypes = implode(',', [str_replace('nofrixion_', '', $this->getId())]);
+			$updatePr->orderID = $orderNumber;
+			$updatePr->cardCreateToken = $createToken;
+			$updatePr->customerID = $createToken ? (string) $userId : null;
+			$updatePr->customerEmailAddress = $order->get_billing_email();
+
+			$paymentRequest = $client->updatePaymentRequest($paymentRequestId, $updatePr);
+			/*
 			$paymentRequest = $client->updatePaymentRequest(
 				$paymentRequestId,
 				'',
@@ -569,8 +597,8 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				null,
 				$order->get_billing_email()
 			);
-
-			$this->updateOrderMetadata( $order->get_id(), $paymentRequest );
+			*/
+			$this->updateOrderMetadata( $order->get_id(), (array) $paymentRequest );
 
 			return $paymentRequest;
 
@@ -649,10 +677,21 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		$amountFormatted = PreciseNumber::parseFloat( $amount );
 
 		// PaymentRequest client.
-		$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+		$client = new PaymentRequestClient( $this->apiHelper->url, $this->apiHelper->apiToken );
 
 		// Create payment request with cardtoken payment type.
 		try {
+
+			$newPr = new PaymentRequestCreate($amountFormatted->__toString());
+			$newPr->baseOriginUrl = $originUrl;
+			$newPr->callbackUrl = $this->get_return_url($renewalOrder);
+			$newPr->customerEmailAddress = $order->get_billing_email();
+			$newPr->currency = $currency;
+			$newPr->paymentMethodTypes = 'cardtoken';
+			$newPr->orderID = $orderNumber;
+
+			$paymentRequest = $client->createPaymentRequest($newPr);
+			/*
 			$paymentRequest = $client->createPaymentRequest(
 				'',
 				$this->get_return_url($renewalOrder),
@@ -662,7 +701,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 				['cardtoken'],
 				$orderNumber
 			);
-
+			*/
 			$renewalOrder->update_meta_data('NoFrixion_isSubscription',1);
 			$renewalOrder->update_meta_data('NoFrixion_tokenisedCard_id', $tokenisedCardId);
 
@@ -676,7 +715,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 		try {
 			// Charge payment request with tokenised card.
 			$paywithTokenResult = $client->payWithCardToken(
-				$paymentRequest['id'],
+				$paymentRequest->id,
 				$tokenisedCardId
 			);
 
@@ -723,7 +762,7 @@ abstract class NoFrixionGateway extends \WC_Payment_Gateway {
 
 		try {
 			// PaymentRequest client.
-			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+			$client = new PaymentRequestClient( $this->apiHelper->url, $this->apiHelper->apiToken );
 
 			// Charge payment request with tokenised card.
 			$result = $client->payWithCardToken(

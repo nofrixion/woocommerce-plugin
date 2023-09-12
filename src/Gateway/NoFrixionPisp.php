@@ -4,7 +4,7 @@ declare( strict_types=1 );
 
 namespace NoFrixion\WC\Gateway;
 
-use NoFrixion\Client\PaymentRequest;
+use NoFrixion\Client\PaymentRequestClient;
 use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
 
@@ -116,7 +116,7 @@ class NoFrixionPisp extends NoFrixionGateway {
 
 		// Initiate pisp payment.
 		try {
-			$client = new PaymentRequest( $this->apiHelper->url, $this->apiHelper->apiToken );
+			$client = new PaymentRequestClient( $this->apiHelper->url, $this->apiHelper->apiToken );
 
 			$paymentInitiationRequest = $client->submitPaymentInitiationRequest(
 				$paymentRequestId,

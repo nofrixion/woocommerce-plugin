@@ -13,6 +13,8 @@
  */
 
 use NoFrixion\Client\PaymentRequestClient;
+use Nofrixion\Model\PaymentRequests\PaymentRequestCreate;
+use Nofrixion\Model\PaymentRequests\PaymentRequestUpdate;
 use NoFrixion\Util\PreciseNumber;
 use NoFrixion\WC\Helper\ApiHelper;
 use NoFrixion\WC\Helper\Logger;
@@ -141,18 +143,20 @@ class NoFrixionWCPlugin {
 
 		try {
 			$apiHelper = new ApiHelper();
-			$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
-			$result = $client->createPaymentRequest(
-				site_url(),
-				site_url() . '/dummyreturnurl',
-				PreciseNumber::parseFloat($total),
-				WC()->cart->get_customer()->get_billing_email(),
-				get_option('woocommerce_currency', null),
-				[$gateway],
-				null,
-				true,
-				'temp' . WC()->cart->get_customer()->get_id()
-			);
+			$client = new PaymentRequestClient( $apiHelper->url, $apiHelper->apiToken);
+
+			$newPr = new PaymentRequestCreate(PreciseNumber::parseFloat($total));
+			$newPr->baseOriginUrl = site_url();
+			$newPr->customerEmailAddress = WC()->cart->get_customer()->get_billing_email();
+			$newPr->currency = get_option('woocommerce_currency', null);
+			if (is_array($gateway)) {
+				$paymentMethodTypes = implode(',', $gateway);
+			}
+			$newPr->paymentMethodTypes = $paymentMethodTypes;
+			$newPr->cardCreateToken = true;
+			$newPr->customerID = 'temp' . WC()->cart->get_customer()->get_id();
+
+			$result = $client->createPaymentRequest($newPr);
 
 			Logger::debug('Result from temporary payment request: ' . print_r($result, true));
 
@@ -162,7 +166,7 @@ class NoFrixionWCPlugin {
 
 			wp_send_json_success(
 				[
-					'paymentRequestId' => $result['id'] ?? null,
+					'paymentRequestId' => $result->id ?? null,
 				]
 			);
 		} catch (\Throwable $e) {
@@ -192,8 +196,19 @@ class NoFrixionWCPlugin {
 
 		try {
 			$apiHelper = new ApiHelper();
-			$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
-			$result = $client->createPaymentRequest(
+			$client = new PaymentRequestClient( $apiHelper->url, $apiHelper->apiToken);
+			
+			$newPr = new PaymentRequestCreate(PreciseNumber::parseFloat(0.00));
+			$newPr->baseOriginUrl = site_url();
+			$newPr->callbackUrl = $callbackUrl;
+			$newPr->paymentMethodTypes = "card";
+			$newPr->cardCreateToken = true;
+			$newPr->customerID = get_current_user_id();
+			$newPr->cardAuthorizeOnly = true;
+
+			$result = $client->createPaymentRequest($newPr);
+
+			/*$result = $client->createPaymentRequest(
 				site_url(),
 				$callbackUrl,
 				PreciseNumber::parseFloat(0.00),
@@ -203,16 +218,16 @@ class NoFrixionWCPlugin {
 				true,
 				get_current_user_id(),
 				true
-			);
+			);*/
 
 			Logger::debug('Result creating PR for payment method change: ' . print_r($result, true));
 
-			update_post_meta($orderId, 'NoFrixion_pmupdate_PrId', $result['id']);
+			update_post_meta($orderId, 'NoFrixion_pmupdate_PrId', $result->id);
 			update_post_meta($orderId, 'NoFrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
 
 			wp_send_json_success(
 				[
-					'paymentRequestId' => $result['id'] ?? null,
+					'paymentRequestId' => $result->id ?? null,
 				]
 			);
 		} catch (\Throwable $e) {
@@ -269,22 +284,20 @@ class NoFrixionWCPlugin {
 
 		try {
 			$apiHelper = new ApiHelper();
-			$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
-			$result = $client->createPaymentRequest(
-				site_url(),
-				site_url() . '/dummycallback',
-				PreciseNumber::parseFloat(0.00),
-				WC()->cart->get_customer()->get_billing_email(),
-				null,
-				['card'],
-				null,
-				true,
-				get_current_user_id(),
-				true
-			);
+			$client = new PaymentRequestClient( $apiHelper->url, $apiHelper->apiToken);
+			$amount = PreciseNumber::parseFloat(0.00);
+
+			$newPr = new PaymentRequestCreate($amount);
+			$newPr->baseOriginUrl = site_url();
+			$newPr->customerEmailAddress = WC()->cart->get_customer()->get_billing_email();
+			$newPr->cardCreateToken = true;
+			$newPr->customerID = get_current_user_id();
+			$newPr->cardAuthorizeOnly = true;
+
+			$result = $client->createPaymentRequest($newPr);
 
 			$callbackUrl = site_url() . '/?'. NoFrixionWCPlugin::CALLBACK_AUTH_CARD .'&';
-			$callbackUrl .= 'authReqId=' . $result['id'];
+			$callbackUrl .= 'authReqId=' . $result->id;
 
 			if ($result) {
 				Logger::debug('Result creating PR for authorize only: ' . print_r($result, true));
@@ -293,22 +306,12 @@ class NoFrixionWCPlugin {
 			}
 
 			// Store the prId on the user as we do not have any order for this use case.
-			update_user_meta(get_current_user_id(), 'NoFrixion_authorizeCard_prId', $result['id']);
+			update_user_meta(get_current_user_id(), 'NoFrixion_authorizeCard_prId', $result->id);
 
 			// Update PR with callback URL.
-			$updatedPr = $client->updatePaymentRequest(
-				$result['id'],
-				site_url(),
-				$callbackUrl,
-				PreciseNumber::parseFloat(0.00),
-				null,
-				['card'],
-				null,
-				true,
-				get_current_user_id(),
-				true,
-				WC()->cart->get_customer()->get_billing_email()
-			);
+			$updatedPr = new PaymentRequestUpdate;
+			$updatedPr->callbackUrl = $callbackUrl;
+			$updatedPr = $client->updatePaymentRequest($result->id, $updatedPr);
 
 			if ($updatedPr) {
 				Logger::debug('Updated PR for authorize only: ' . print_r($updatedPr, true));
@@ -318,7 +321,7 @@ class NoFrixionWCPlugin {
 
 			wp_send_json_success(
 				[
-					'paymentRequestId' => $result['id'] ?? null,
+					'paymentRequestId' => $result->id ?? null,
 				]
 			);
 		} catch (\Throwable $e) {
@@ -371,11 +374,11 @@ class NoFrixionWCPlugin {
 			try {
 				$apiHelper = new ApiHelper();
 
-				$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+				$client = new PaymentRequestClient( $apiHelper->url, $apiHelper->apiToken);
 				$paymentRequest = $client->getPaymentRequest($paymentRequestID);
-				$payment = $paymentRequest['result']['payments'][0] ?? null;
-				$tokenizedCard = $paymentRequest['tokenisedCards'][0] ?? null;
-				$paymentStatus = $paymentRequest['result']['result'] ?? null;
+				$payment = $paymentRequest->result->payments[0] ?? null;
+				$tokenizedCard = $paymentRequest->tokenisedCards[0] ?? null;
+				$paymentStatus = $paymentRequest->result->result ?? null;
 
 				Logger::debug('Payment request data: ' . print_r($paymentRequest, true));
 
@@ -599,12 +602,12 @@ add_action( 'template_redirect', function() {
 	// Get the new cc tokenised card id and overwrite it on the parent order for the future charges.
 	try {
 		$apiHelper = new ApiHelper();
-		$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+		$client = new PaymentRequestClient( $apiHelper->url, $apiHelper->apiToken);
 		$updatedPr = $client->getPaymentRequest($updatedPrId);
 
-		$payment = $updatedPr['result']['payments'][0] ?? null;
-		$tokenizedCard = $updatedPr['tokenisedCards'][0] ?? null;
-		$paymentStatus = $updatedPr['result']['result'];
+		$payment = $updatedPr->result->payments[0] ?? null;
+		$tokenizedCard = $updatedPr->tokenisedCards[0] ?? null;
+		$paymentStatus = $updatedPr->result->result;
 
 		Logger::debug('TokenisedCardId: ' . $tokenizedCard['id']);
 		Logger::debug('Payment status: ' . $paymentStatus);
@@ -666,11 +669,11 @@ add_action( 'template_redirect', function() {
 	// Get the new cc tokenised card id and overwrite it on the parent order for the future charges.
 	try {
 		$apiHelper = new ApiHelper();
-		$client = new PaymentRequest( $apiHelper->url, $apiHelper->apiToken);
+		$client = new PaymentRequestClient( $apiHelper->url, $apiHelper->apiToken);
 		$pr = $client->getPaymentRequest($prId);
 
-		$tokenizedCard = $pr['tokenisedCards'][0] ?? null;
-		$paymentStatus = $pr['result']['result'];
+		$tokenizedCard = $pr->tokenisedCards[0] ?? null;
+		$paymentStatus = $pr->result->result;
 
 		Logger::debug('TokenisedCardId: ' . $tokenizedCard['id']);
 		Logger::debug('Payment status: ' . $paymentStatus);
