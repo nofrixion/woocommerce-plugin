@@ -6,6 +6,6 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Nofrixion\\WC\\' => array($baseDir . '/src'),
     'Nofrixion\\' => array($vendorDir . '/nofrixion/moneymoov-php/src'),
-    'NoFrixion\\WC\\' => array($baseDir . '/src'),
 );

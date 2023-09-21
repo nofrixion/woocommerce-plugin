@@ -9,33 +9,24 @@ class ComposerStaticInitb239ea4f9e826c6bcbffbb435c068265
     public static $prefixLengthsPsr4 = array (
         'N' => 
         array (
+            'Nofrixion\\WC\\' => 13,
             'Nofrixion\\' => 10,
-            'NoFrixion\\WC\\' => 13,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'Nofrixion\\WC\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src',
+        ),
         'Nofrixion\\' => 
         array (
             0 => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src',
-        ),
-        'NoFrixion\\WC\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/src',
         ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'NoFrixion\\WC\\Admin\\GlobalSettings' => __DIR__ . '/../..' . '/src/Admin/GlobalSettings.php',
-        'NoFrixion\\WC\\Admin\\Notice' => __DIR__ . '/../..' . '/src/Admin/Notice.php',
-        'NoFrixion\\WC\\Gateway\\NoFrixionCard' => __DIR__ . '/../..' . '/src/Gateway/NoFrixionCard.php',
-        'NoFrixion\\WC\\Gateway\\NoFrixionGateway' => __DIR__ . '/../..' . '/src/Gateway/NoFrixionGateway.php',
-        'NoFrixion\\WC\\Gateway\\NoFrixionPisp' => __DIR__ . '/../..' . '/src/Gateway/NoFrixionPisp.php',
-        'NoFrixion\\WC\\Helper\\ApiHelper' => __DIR__ . '/../..' . '/src/Helper/ApiHelper.php',
-        'NoFrixion\\WC\\Helper\\Logger' => __DIR__ . '/../..' . '/src/Helper/Logger.php',
-        'NoFrixion\\WC\\Helper\\OrderStates' => __DIR__ . '/../..' . '/src/Helper/OrderStates.php',
-        'NoFrixion\\WC\\Helper\\TokenManager' => __DIR__ . '/../..' . '/src/Helper/TokenManager.php',
         'Nofrixion\\Client\\AbstractClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/AbstractClient.php',
         'Nofrixion\\Client\\MerchantClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/MerchantClient.php',
         'Nofrixion\\Client\\PaymentRequestClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/PaymentRequestClient.php',
@@ -60,6 +51,15 @@ class ComposerStaticInitb239ea4f9e826c6bcbffbb435c068265
         'Nofrixion\\Model\\PaymentRequests\\PaymentRequestUpdate' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentRequestUpdate.php',
         'Nofrixion\\Model\\Webhook' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/Webhook.php',
         'Nofrixion\\Util\\PreciseNumber' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Util/PreciseNumber.php',
+        'Nofrixion\\WC\\Admin\\GlobalSettings' => __DIR__ . '/../..' . '/src/Admin/GlobalSettings.php',
+        'Nofrixion\\WC\\Admin\\Notice' => __DIR__ . '/../..' . '/src/Admin/Notice.php',
+        'Nofrixion\\WC\\Gateway\\NofrixionCard' => __DIR__ . '/../..' . '/src/Gateway/NofrixionCard.php',
+        'Nofrixion\\WC\\Gateway\\NofrixionGateway' => __DIR__ . '/../..' . '/src/Gateway/NofrixionGateway.php',
+        'Nofrixion\\WC\\Gateway\\NofrixionPisp' => __DIR__ . '/../..' . '/src/Gateway/NofrixionPisp.php',
+        'Nofrixion\\WC\\Helper\\ApiHelper' => __DIR__ . '/../..' . '/src/Helper/ApiHelper.php',
+        'Nofrixion\\WC\\Helper\\Logger' => __DIR__ . '/../..' . '/src/Helper/Logger.php',
+        'Nofrixion\\WC\\Helper\\OrderStates' => __DIR__ . '/../..' . '/src/Helper/OrderStates.php',
+        'Nofrixion\\WC\\Helper\\TokenManager' => __DIR__ . '/../..' . '/src/Helper/TokenManager.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

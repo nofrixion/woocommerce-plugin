@@ -3,7 +3,7 @@
         'name' => 'nofrixion/nofrixion-for-woocommerce',
         'pretty_version' => 'dev-develop',
         'version' => 'dev-develop',
-        'reference' => '3a65cf6774194ced408d9e67f36909283dcf8fb3',
+        'reference' => 'dde27e1db6aebc5d1fee7c124977b7669a737419',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -24,7 +24,7 @@
         'nofrixion/nofrixion-for-woocommerce' => array(
             'pretty_version' => 'dev-develop',
             'version' => 'dev-develop',
-            'reference' => '3a65cf6774194ced408d9e67f36909283dcf8fb3',
+            'reference' => 'dde27e1db6aebc5d1fee7c124977b7669a737419',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
