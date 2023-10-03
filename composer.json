@@ -17,6 +17,6 @@
     }
   ],
   "require": {
-    "nofrixion/moneymoov-php": "dev-PLU19-make-merchantId-optional as 3.0.0"
+    "nofrixion/moneymoov-php": "^3.0.0"
   }
 }
