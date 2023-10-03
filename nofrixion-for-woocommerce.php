@@ -10,7 +10,7 @@
  * Domain Path:     /languages
  * Version:         1.2.0
  * Requires PHP:    7.4
- * Tested up to:    6.1 * Requires at least: 5.2
+ * Tested up to:    6.3 * Requires at least: 5.2
  */
 
 use Nofrixion\Client\PaymentRequestClient;
@@ -22,16 +22,21 @@ use Nofrixion\WC\Helper\Logger;
 use Nofrixion\WC\Helper\TokenManager;
 
 defined('ABSPATH') || exit();
+
 define('NOFRIXION_VERSION', '1.2.0');
+// bump these independently of NOFRIXION_VERSION for cachebusting during development
+define('NOFRIXION_JS_VERSION', '1.2.0');
+define('NOFRIXION_CSS_VERSION', '1.2.0');
+
 define('NOFRIXION_PLUGIN_FILE_PATH', plugin_dir_path(__FILE__));
 define('NOFRIXION_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('NOFRIXION_PLUGIN_ID', 'nofrixion-for-woocommerce');
 define('NORFIXION_REST_URL_NAMESPACE', 'nofrixion/v1');
 define('NORFIXION_SUCCESS_WEBHOOK_ROUTE', '/pisp-notify');
+define('NOFRIXION_SESSION_PAYMENTREQUEST_ID', 'nofrixion_payment_request_id');
 
 class NofrixionWCPlugin
 {
-
 	const SESSION_PAYMENTREQUEST_ID = 'nofrixion_payment_request_id';
 	const CALLBACK_PM_CHANGE = 'order-payment-method-change';
 	const CALLBACK_AUTH_CARD = 'authorize-card';
@@ -62,7 +67,7 @@ class NofrixionWCPlugin
 			));
 		});
 
-		// Modify thank you page text if we have `?error` query string.
+		// Modify thank you page text if we have `?error` query string in callBackUrl.
 		add_filter('woocommerce_endpoint_order-received_title', [$this, 'modifyThankYouPageTitle']);
 		add_filter('woocommerce_thankyou_order_received_text', [$this, 'modifyCustomerThankyouText']);
 
@@ -149,7 +154,7 @@ class NofrixionWCPlugin
 	 */
 	public function processAjaxPaymentRequestInit()
 	{
-
+		$client = $this->apiHelper->paymentRequestClient;
 		Logger::debug('Entering processAjaxPaymentRequestInit()');
 
 		$nonce = $_POST['apiNonce'];
@@ -162,15 +167,25 @@ class NofrixionWCPlugin
 			wp_die('Payment gateway not supported.', '', ['response' => 400]);
 		}
 
+		// check if payment request 'stub' is already created in this user session.
 		if (class_exists('WC_Session')) {
-			$paymentRequestId = WC()->session->get('nofrixion_in_progress_payment_reqpuest');
-
-			if ($paymentRequestId !== null) {
-				// The session data key 'your_session_data_key' exists, and $session_data contains its value.
-				// You can proceed to use $session_data.
-			} else {
-				// The session data key 'your_session_data_key' doesn't exist or is set to null.
-				// Handle this case accordingly.
+			$paymentRequestId = WC()->session->get(NOFRIXION_SESSION_PAYMENTREQUEST_ID);
+			if ($paymentRequestId) {
+				try{
+					$tempPaymentRequest = $client->getPaymentRequest($paymentRequestId);
+					// check payment request hasn't been used for another order.
+					if (!isset($tempPaymentRequest->orderID)) {
+						// Empty Payment request is already set up.
+						Logger::debug('Payment request already set up. Returning SESSION_PAYMENT_REQUEST_ID.');
+						wp_send_json_success(
+							[
+								'paymentRequestId' => $paymentRequestId,
+							]
+						);
+					}
+				} catch (\Throwable $e) {
+					Logger::debug('Payment request matching SESSION_PAYMENT_REQUEST_ID does not exist. Creating new Payment Request...');
+				}
 			}
 		}
 
@@ -185,12 +200,12 @@ class NofrixionWCPlugin
 			$newPr->customerID = 'temp' . WC()->cart->get_customer()->get_id();
 			$newPr->successWebHookUrl = get_rest_url() . NORFIXION_REST_URL_NAMESPACE . NORFIXION_SUCCESS_WEBHOOK_ROUTE;
 
-			$result = $this->apiHelper->paymentRequestClient->createPaymentRequest($newPr);
+			$result = $client->createPaymentRequest($newPr);
 			Logger::debug('Result from temporary payment request: ' . print_r($result, true));
 
 			// Store payment request id in the session.
 			// Todo: needs more testing if gets cleared after checkout complete to not reuse old data.
-			// WC()->session->set(self::SESSION_PAYMENTREQUEST_ID, $result['id']);
+			WC()->session->set(NOFRIXION_SESSION_PAYMENTREQUEST_ID, $result->id);
 
 			wp_send_json_success(
 				[
@@ -234,18 +249,6 @@ class NofrixionWCPlugin
 
 			$result = $this->apiHelper->paymentRequestClient->createPaymentRequest($newPr);
 
-			/*$result = $client->createPaymentRequest(
-				site_url(),
-				$callbackUrl,
-				PreciseNumber::parseFloat(0.00),
-				null,
-				['card'],
-				null,
-				true,
-				get_current_user_id(),
-				true
-			);*/
-
 			Logger::debug('Result creating PR for payment method change: ' . print_r($result, true));
 
 			update_post_meta($orderId, 'Nofrixion_pmupdate_PrId', $result->id);
@@ -279,7 +282,7 @@ class NofrixionWCPlugin
 		// Make sure the submitted payment request id and the one in the session are the same.
 		// Todo: needs more testing if gets cleared after checkout complete to not reuse old data.
 		/*
-		$sessionPRId = WC()->session->get(self::SESSION_PAYMENTREQUEST_ID);
+		$sessionPRId = WC()->session->get(NOFRIXION_SESSION_PAYMENTREQUEST_ID);
 		$submittedPRId =  wc_clean( wp_unslash( $_POST['payment_request_id']));
 		if ($sessionPRId !== $submittedPRId) {
 			Logger::debug('Submitted and session payment ids differ, aborting.');
@@ -311,8 +314,7 @@ class NofrixionWCPlugin
 		}
 
 		try {
-			$apiHelper = new ApiHelper();
-			$client = new PaymentRequestClient($apiHelper->url, $apiHelper->apiToken);
+			$client = $this->apiHelper->paymentRequestClient;
 			$amount = PreciseNumber::parseFloat(0.00);
 
 			$newPr = new PaymentRequestCreate($amount);
@@ -378,25 +380,27 @@ class NofrixionWCPlugin
 		}
 	}
 
-	function modifyThankYouPageTitle($title) {
+	function modifyThankYouPageTitle($title)
+	{
 		// Check if this is the thank you page by inspecting the URL
-		if (isset($_REQUEST["error"])) {
+		if (isset($_REQUEST["error"]) || isset($_REQUEST["cancelled"])) {
 			// Modify the title as needed
-			return 'Order payment failed';
+			return 'Payment failed';
 		}
-	
+
 		return $title;
 	}
 
-	function modifyCustomerThankyouText($message) {
-		if (isset($_REQUEST["error"])) {
-			return "Unfortunately your bank did not successfully process payment.Please make a new order. \nContact your financial institution if problems persist.";
+	function modifyCustomerThankyouText($message)
+	{
+		if (isset($_REQUEST["error"]) || isset($_REQUEST["cancelled"])) {
+			return "<p>Payment was not successfully processed by your bank. Please make a new order.</p>
+					<p>If problems persist, please contact your financial institution.</p>";
 		} else {
 			return $message;
-
 		}
 	}
-	
+
 	/**
 	 * The payment received page is used as the callbackUrl of NoFrixion to check the PaymentRequest status and update
 	 * the order. The PaymentRequest check is done on each visit of that page but stops if the payment failed or succeeded.
@@ -418,21 +422,31 @@ class NofrixionWCPlugin
 		if (!in_array($currentOrderStatus, ['processing', 'completed']) && $paymentRequestID) {
 			// Check PaymentRequest.
 			try {
-				$client = $this->apiHelper->paymentRequestClient;
-				$paymentRequest = $client->getPaymentRequest($paymentRequestID);
-				$payment = $paymentRequest->result->payments[0] ?? null;
-				$tokenizedCard = $paymentRequest->tokenisedCards[0] ?? null;
-				$paymentStatus = $paymentRequest->status ?? null; // comes back 'None' rather than null.
-
-				Logger::debug('Payment request data: ' . print_r($paymentRequest, true));
-
-				// MoneyMoov API adds "error" query param if Pay by bank fails => Void paymented request.
+				// MoneyMoov API adds "error" query param if Pay by bank fails => Void payment request.
 				if (isset($_REQUEST["error"])) {
 					$errorMessage = $_REQUEST["error"];
 					$paymentStatus = "PispError";
 					// updatePaymentRequest model currently doesn't support status changes
 					// ... if we leave 'Status' as 'None' can move above code into else block.
 				}
+				// "cancelled" query param in some cases from NoFrixion provider.
+				elseif (isset($_REQUEST["cancelled"]) && $_REQUEST["cancelled"]=='true') {
+					$errorMessage = "Transaction was cancelled by banking provider.";
+					$paymentStatus = "PispError";
+					// updatePaymentRequest model currently doesn't support status changes
+					// ... if we leave 'Status' as 'None' can move above code into else block.
+				}
+				else {
+					$client = $this->apiHelper->paymentRequestClient;
+					$paymentRequest = $client->getPaymentRequest($paymentRequestID);
+					$paymentStatus = $paymentRequest->status ?? null; // comes back 'None' rather than null.
+	
+					Logger::debug('Payment request data: ' . print_r($paymentRequest, true));
+				}
+
+				$payment = $paymentRequest->result->payments[0] ?? null;
+				$tokenisedCard = $paymentRequest->tokenisedCards[0] ?? null;
+				
 
 				if (isset($paymentStatus)) {
 					switch ($paymentStatus) {
@@ -470,7 +484,7 @@ class NofrixionWCPlugin
 							break;
 						case "PispError":
 							$order->update_status('failed');
-							$order->add_order_note(_x('Payment by Bank failed with error: ' . $errorMessage, 'nofrixion-for-woocommerce'), 1);
+							$order->add_order_note(_x('Pay by bank failed with error: ' . $errorMessage . '. Please create a new order.', 'nofrixion-for-woocommerce'), 1);
 							$order->save();
 							break;
 						case "None":
@@ -486,16 +500,16 @@ class NofrixionWCPlugin
 
 						// Create a cc token for future charges.
 						Logger::debug('Check if we need to store a token.');
-						if ($tokenizedCard && ($isSubscription || $saveToken)) {
-							TokenManager::addToken($tokenizedCard, get_current_user_id());
+						if ($tokenisedCard && ($isSubscription || $saveToken)) {
+							TokenManager::addToken($tokenisedCard, get_current_user_id());
 						}
 
 						// For subscriptions, also store the tokenisedCardId on the order for recurring charges.
 						if ($isSubscription) {
-							$order->update_meta_data('Nofrixion_cardTokenCustomerID', $payment['cardTokenCustomerID']);
-							$order->update_meta_data('Nofrixion_cardTransactionID', $payment['cardTransactionID']);
-							$order->update_meta_data('Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID']);
-							$order->update_meta_data('Nofrixion_tokenisedCard_id', $tokenizedCard['id']);
+							//$order->update_meta_data('Nofrixion_cardTokenCustomerID', $payment['cardTokenCustomerID']);
+							//$order->update_meta_data('Nofrixion_cardTransactionID', $payment['cardTransactionID']);
+							//$order->update_meta_data('Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID']);
+							$order->update_meta_data('Nofrixion_tokenisedCard_id', $tokenisedCard['id']);
 							$order->add_order_note(_x('Received card token for future charges of a subscription.', 'nofrixion-for-woocommerce'));
 							$order->save();
 						}
@@ -515,7 +529,7 @@ class NofrixionWCPlugin
 				$statusDesc = _x('There was a problem finishing your order, order now on hold, we will get in contact with you.', 'nofrixion-for-woocommerce');
 				break;
 			case 'pending':
-				$statusDesc = _x('Order placed. Confirmation email will be sent on receipt of funds from your bank.', 'nofrixion-for-woocommerce');
+				$statusDesc = _x('Payment authorised. An order confirmation email will be sent upon receipt of funds from your bank.', 'nofrixion-for-woocommerce');
 				break;
 			case 'processing':
 				$statusDesc = _x('Payment completed, processing your order.', 'nofrixion-for-woocommerce');
@@ -525,9 +539,9 @@ class NofrixionWCPlugin
 				break;
 			case 'failed':
 				if ($paymentStatus === "PispError") {
-					$statusDesc = _x('Payment by Bank failed with error: ' . $errorMessage, 'nofrixion-for-woocommerce');
+					$statusDesc = _x('Error: ' . $errorMessage, 'nofrixion-for-woocommerce');
 				} else {
-					$statusDesc = _x('Payment failed', 'nofrixion-for-woocommerce');
+					$statusDesc = _x('Payment failed.', 'nofrixion-for-woocommerce');
 				}
 				break;
 			default:
@@ -662,27 +676,27 @@ add_action('template_redirect', function () {
 		$updatedPr = $client->getPaymentRequest($updatedPrId);
 
 		$payment = $updatedPr->result->payments[0] ?? null;
-		$tokenizedCard = $updatedPr->tokenisedCards[0] ?? null;
+		$tokenisedCard = $updatedPr->tokenisedCards[0] ?? null;
 		$paymentStatus = $updatedPr->result->result;
 
-		Logger::debug('TokenisedCardId: ' . $tokenizedCard['id']);
+		Logger::debug('TokenisedCardId: ' . $tokenisedCard['id']);
 		Logger::debug('Payment status: ' . $paymentStatus);
 		// Update order status?
-		if ($tokenizedCard && $paymentStatus === 'FullyPaid') {
+		if ($tokenisedCard && $paymentStatus === 'FullyPaid') {
 			// Save tokenized card id on current and parent order.
 			$subscription->update_meta_data('Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID']);
-			$subscription->update_meta_data('Nofrixion_tokenisedCard_id', $tokenizedCard['id']);
+			$subscription->update_meta_data('Nofrixion_tokenisedCard_id', $tokenisedCard['id']);
 			$subscription->save();
 			$subscription->add_order_note(__('Received card token for future charges of a subscription, updated parent order.', 'nofrixion-for-woocommerce'));
 			$parentOrder->update_meta_data('Nofrixion_cardAuthorizationID', $payment['cardAuthorizationID']);
-			$parentOrder->update_meta_data('Nofrixion_tokenisedCard_id', $tokenizedCard['id']);
+			$parentOrder->update_meta_data('Nofrixion_tokenisedCard_id', $tokenisedCard['id']);
 			$parentOrder->update_meta_data('Nofrixion_pmupdate_datetime', (new \DateTime())->format('Y-m-d H:i:s'));
 			$parentOrder->save();
 			$parentOrder->add_order_note(sprintf(__('Updated card token after payment method change by order/subscription id %u.', 'nofrixion-for-woocommerce'), $subscriptionId));
 			Logger::debug('Updated order and parent order with new tokenised card details.');
 
 			// Store CC data as token.
-			TokenManager::addToken($tokenizedCard, get_current_user_id());
+			TokenManager::addToken($tokenisedCard, get_current_user_id());
 
 			WC_Subscriptions_Change_Payment_Gateway::update_payment_method($subscription, $subscription->get_payment_method());
 
@@ -724,18 +738,17 @@ add_action('template_redirect', function () {
 	// Get the new cc tokenised card id and overwrite it on the parent order for the future charges.
 	try {
 		$apiHelper = new ApiHelper();
-		$client = new PaymentRequestClient($apiHelper->url, $apiHelper->apiToken);
-		$pr = $client->getPaymentRequest($prId);
+		$pr = $apiHelper->paymentRequestClient->getPaymentRequest($prId);
 
-		$tokenizedCard = $pr->tokenisedCards[0] ?? null;
+		$tokenisedCard = $pr->tokenisedCards[0] ?? null;
 		$paymentStatus = $pr->result->result;
 
-		Logger::debug('TokenisedCardId: ' . $tokenizedCard['id']);
+		Logger::debug('TokenisedCardId: ' . $tokenisedCard['id']);
 		Logger::debug('Payment status: ' . $paymentStatus);
 		// Update order status?
-		if ($tokenizedCard && $paymentStatus === 'FullyPaid') {
+		if ($tokenisedCard && $paymentStatus === 'FullyPaid') {
 			// Store CC data as token.
-			TokenManager::addToken($tokenizedCard, get_current_user_id());
+			TokenManager::addToken($tokenisedCard, get_current_user_id());
 
 			$messages[] = __('Thank you. Your card details have been updated.', 'nofrixion-for-woocommerce');
 		} else {

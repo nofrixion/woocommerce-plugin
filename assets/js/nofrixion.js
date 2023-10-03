@@ -3,8 +3,9 @@
  */
 var createPaymentRequest = function (gateway) {
 	// Create skeleton payment request for either card/pisp gateway.
+	console.log('Getting payment request ID...');
 
-	console.log('Creating payment request...');
+	blockElement('.woocommerce-checkout-payment');
 
 	let data = {
 		'action': 'nofrixion_payment_request_init',
@@ -15,18 +16,20 @@ var createPaymentRequest = function (gateway) {
 	jQuery.post(NoFrixionWP.url, data, function (response) {
 		if (response.data.paymentRequestId) {
 			try {
-				paymentRequestID = response.data.paymentRequestId;
-				jQuery('#payment_request_id').val(paymentRequestID);
-				console.log("... payment request ID: " + paymentRequestID);
+				window.nfWCpaymentRequestID = response.data.paymentRequestId;	
+				jQuery('#payment_request_id').val(window.nfWCpaymentRequestID);
+				console.log("... payment request ID: " + window.nfWCpaymentRequestID);
 				window.nfPayElement = new NoFrixionPayElementHeadless(
-					paymentRequestID, 
+					window.nfWCpaymentRequestID,
 					'nf-number-container',
-					'nf-securityCode-container', 
-					'nf-error', 
+					'nf-securityCode-container',
+					'nf-error',
 					NoFrixionWP.apiUrl
 				);
 				window.nfPayElement.load();
 				console.log(response);
+				// Unblock when we have a payment request number, no point having it accessible until then.		
+				unblockElement('.woocommerce-checkout-payment');
 			} catch (ex) {
 				console.log('Error occurred initializing the payframe: ' + ex);
 			}
@@ -48,51 +51,49 @@ var createPaymentRequest = function (gateway) {
 
 /**
  * Trigger ajax request to create only payment request for authorize card.
+ * - this is used from the account management page to add a card.
+ */
 var createPaymentRequestAuthorizeCard = function () {
 
-	if (!isValidUuid(jQuery('#payment_request_id').val())) {
+	console.log('Creating payment request (authorize card).');
 
-		console.log('Creating payment request (authorize card).');
+	let data = {
+		'action': 'nofrixion_payment_request_authorize_card',
+		'apiNonce': NoFrixionWP.apiNonce,
+		'gateway': jQuery('input[name="payment_method"]:checked').val()
+	};
 
-		let data = {
-			'action': 'nofrixion_payment_request_authorize_card',
-			'apiNonce': NoFrixionWP.apiNonce,
-			'gateway': jQuery('input[name="payment_method"]:checked').val()
-		};
-
-		jQuery.post(NoFrixionWP.url, data, function (response) {
-			if (response.data.paymentRequestId) {
-				try {
-					window.nfWCpaymentRequestID = response.data.paymentRequestId;
-					console.log("payment request ID=" + window.nfWCpaymentRequestID + ".");
-					window.nfPayElement = new NoFrixionPayElementHeadless(
-						window.nfWCpaymentRequestID,
-						'nf-number-container',
-						'nf-securityCode-container',
-						'nf-error',
-						NoFrixionWP.apiUrl
-					);
-					window.nfPayElement.load();
-					console.log(response);
-				} catch (ex) {
-					console.log('Error occurred initializing the payframe: ' + ex);
-				}
-			} else {
-				// Show errors.
-				if (response.messages) {
-					submitError(response.messages);
-				} else {
-					submitError('<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>'); // eslint-disable-line max-len
-				}
+	jQuery.post(NoFrixionWP.url, data, function (response) {
+		if (response.data.paymentRequestId) {
+			try {
+				window.nfWCpaymentRequestID = response.data.paymentRequestId;
+				console.log("Payment request ID: " + window.nfWCpaymentRequestID + ".");
+				window.nfPayElement = new NoFrixionPayElementHeadless(
+					window.nfWCpaymentRequestID,
+					'nf-number-container',
+					'nf-securityCode-container',
+					'nf-error',
+					NoFrixionWP.apiUrl
+				);
+				window.nfPayElement.load();
+				console.log(response);
+			} catch (ex) {
+				console.log('Error occurred initializing the payframe: ' + ex);
 			}
-		}).fail(function () {
-			submitError('<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>');
-		});
-	}
+		} else {
+			// Show errors.
+			if (response.messages) {
+				submitError(response.messages);
+			} else {
+				submitError('<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>'); // eslint-disable-line max-len
+			}
+		}
+	}).fail(function () {
+		submitError('<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>');
+	});
 
 	return false;
 };
- */
 
 /**
  * Trigger ajax request to create order and process checkout.
@@ -101,8 +102,6 @@ var processPaymentRequestOrder = function () {
 	// Payment request stub will be updated on backend.
 
 	window.nfWCProcessedOrder = false;
-
-	temp = jQuery('#payment_request_id').val();
 
 	if (jQuery('#payment_request_id').val()) {
 
@@ -123,6 +122,7 @@ var processPaymentRequestOrder = function () {
 
 			// Payment done by token, redirect directly to order received page.
 			if (response.orderPaidWithToken === true) {
+				window.nfWCPaidWithToken = true;
 				window.location = response.orderReceivedPage;
 			}
 
@@ -142,8 +142,9 @@ var processPaymentRequestOrder = function () {
 					submitError('<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>'); // eslint-disable-line max-len
 				}
 			}
-		}).fail(function () {
+		}).fail(function (xhr) {
 			unblockElement('.woocommerce-checkout-payment');
+			console.log(xhr);
 			submitError('<div class="woocommerce-error">' + wc_checkout_params.i18n_checkout_error + '</div>');
 		});
 
@@ -172,12 +173,22 @@ var submitPayFrame = function (e) {
 	e.preventDefault();
 	console.log('Triggered submitpayframe');
 
-	if (processPaymentRequestOrder()) {
+	if (processPaymentRequestOrder() && !window.nfWCPaidWithToken) {
 		console.log('Trigger submitting nofrixion form to api.');
 		blockElement('.woocommerce-checkout-payment');
 		makeCardPayment();
 	}
 
+	return false;
+};
+
+/**
+ * Trigger payframe (authorize card) button submit.
+ */
+var submitPayFrameAuthorizeCard = function (e) {
+	e.preventDefault();
+	console.log('Triggered submit payframe (authorize card)');
+	makeCardPayment();
 	return false;
 };
 
@@ -222,16 +233,6 @@ var unblockElement = function (cssClass) {
 };
 
 /**
- * Trigger payframe (authorize card) button submit.
- */
-var submitPayFrameAuthorizeCard = function (e) {
-	e.preventDefault();
-	console.log('Triggered submit payframe (authorize card)');
-	makeCardPayment();
-	return false;
-};
-
-/**
  * Makes sure to trigger on payment method changes and overriding the default button submit handler.
  */
 var noFrixionSelected = function () {
@@ -257,6 +258,7 @@ var noFrixionSelected = function () {
 			// Prevent the default form submission behavior for PayByBank images
 			jQuery('input[type="image"][name="wc-pisp-provider"]').on('click', function (e) {
 				e.preventDefault();
+				e.stopPropagation();
 				pispProviderId = jQuery(this).val();
 				console.log('selected bank ID: ' + pispProviderId);
 				jQuery('#pisp_provider_id').val(pispProviderId);
@@ -280,7 +282,7 @@ var noFrixionAuthorizeCard = function () {
 	console.log('Authorize Card.');
 	var add_pm_form = jQuery('form#add_payment_method');
 	if (jQuery('input[name="payment_method"]:checked', add_pm_form).val() === 'nofrixion_card') {
-		// createPaymentRequestAuthorizeCard();
+		createPaymentRequestAuthorizeCard();
 		// Bind our custom event handler to checkout button.
 		add_pm_form.on('submit', submitPayFrameAuthorizeCard);
 	} else {
@@ -295,6 +297,7 @@ var noFrixionAuthorizeCard = function () {
  * @param error_message
  */
 var submitError = function (error_message) {
+	console.log('handling errors.')
 	let $checkoutForm = jQuery('form.checkout');
 	jQuery('.woocommerce-NoticeGroup-checkout, .woocommerce-error, .woocommerce-message').remove();
 	$checkoutForm.prepend('<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">' + error_message + '</div>'); // eslint-disable-line max-len
@@ -399,11 +402,6 @@ var togglePaymentForm = function (hide = true) {
 	}
 }
 
-function isValidUuid($testString) {
-	uuidRegex = new RegExp("/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i");
-	return uuidRegex.test($testString);
-}
-
 /**
  * Main entry point.
  */
@@ -412,17 +410,19 @@ jQuery(function ($) {
 	window.nfWCDelay = 3000;
 	window.nfWCLastRun = 0;
 
-	console.log('Added "payment_request_id" field to checkout form.');
-	$('form[name="checkout"]').append('<input type="hidden" id="payment_request_id" name="payment_request_id"/>');
-
-	window.temp = jQuery('#payment_request_id').val();
-
-	// Listen on Update cart and change of payment methods.
-	$('body').on('init_checkout updated_checkout payment_method_selected', function (event) {
-		console.log('Fired event: ' + event.type);
-		noFrixionSelected();
-		handleStoredTokens();
-	});
+	if ('yes' === NoFrixionWP.is_checkout_page) {
+		console.log('Added "payment_request_id" field to checkout form.');
+		$('form[name="checkout"]').append('<input type="hidden" id="payment_request_id" name="payment_request_id"/>');
+	
+		window.temp = jQuery('#payment_request_id').val();
+	
+		// Listen on Update cart and change of payment methods.
+		$('body').on('init_checkout updated_checkout payment_method_selected', function (event) {
+			console.log('Fired event: ' + event.type);
+			noFrixionSelected();
+			handleStoredTokens();
+		});
+	}
 
 	if ('yes' === NoFrixionWP.is_add_payment_method_page) {
 		noFrixionAuthorizeCard();

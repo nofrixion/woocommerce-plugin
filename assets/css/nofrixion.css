@@ -17,12 +17,17 @@
 	display: none;
 }
 
+.nf-pisp-payment-options{
+  text-align: center;
+}
+
 .nf-bank-button {
 	background: white;
 	border-radius: 0.5rem;
 	border-width: 1px !important;
 	border-color: #cccccc;
-	margin: 0.5rem;
+	margin: 0.25rem; 
+	/* margin: 0 auto; /* Center the items horizontally */
 	padding: 0.5rem;
 	transition-duration: 0.2s;
 	transition-timing-function: ease-in-out;
@@ -31,7 +36,7 @@
 
 .nf-bank-button-selected {
 	background: #eeeeee;
-	outline: 2px solid #7f54b3;
+	outline: 2px solid black;
 }
 
 .nf-bank-button:focus {

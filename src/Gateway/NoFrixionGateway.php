@@ -14,9 +14,6 @@ use Nofrixion\Util\PreciseNumber;
 
 abstract class NofrixionGateway extends \WC_Payment_Gateway
 {
-	private const CSS_VERSION = "1.0.3";
-	private const JS_VERSION = "1.0.17";
-
 	public ApiHelper $apiHelper;
 
 	public function __construct()
@@ -111,6 +108,7 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			Logger::debug('NoFrixion Server API connection not configured, aborting. Please go to NoFrixion settings and set it up.');
 			throw new \Exception(__("Can't process order. No merchant token configured, aborting.", 'nofrixion-for-woocommerce'));
 		}
+		$client = $this->apiHelper->paymentRequestClient;
 
 		// Load the order and check it.
 		$order = new \WC_Order($orderId);
@@ -119,15 +117,40 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			Logger::debug($message, true);
 			throw new \Exception($message);
 		}
-
+		// payment request Id submitted with order
 		$paymentRequestId = wc_clean(wp_unslash($_POST['payment_request_id']));
-
-		Logger::debug('Submitted payment request id ' . $paymentRequestId);
-
 		if (!$paymentRequestId) {
 			$msg_no_prid = 'No payment request id found, aborting.';
 			Logger::debug($msg_no_prid);
 			throw new \Exception($msg_no_prid);
+		}
+		Logger::debug('Submitted payment request id ' . $paymentRequestId);
+
+		// see if existing payment request for this order exists
+		try {
+			$paymentRequest = $client->getPaymentRequestByOrderId((string) $orderId);
+			if ($paymentRequest) {
+				if ($paymentRequestId !== $paymentRequest->id) {
+					// payment request already created for this order, delete the new payment request 'stub'.
+					if ("FullyPaid" === $paymentRequest->status) {
+						// if existing payment request is fully paid there is another problem
+						wc_add_notice(__('An order with this order ID is showing as fully paid. Please empty your cart and create a new order.'), 'error');
+						return;
+					} else {
+						try {
+							$client->deletePaymentRequest($paymentRequestId);
+							Logger::debug('Payment request already exists for order ' . $orderId . ' - deleting duplicate.');
+						} catch (\Throwable $e) {
+							Logger::debug('Error deleting duplicate payment request: ' . $e->getMessage());
+							return ['result' => 'failure'];
+						}
+						WC()->session->__unset(NOFRIXION_SESSION_PAYMENTREQUEST_ID);
+						$paymentRequestId = $paymentRequest->id;
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+			Logger::debug('There is no existing payment request for order id ' . $orderId);
 		}
 
 		// Order paid with token.
@@ -153,72 +176,79 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			$createToken = true;
 		}
 
-		// Update the payment request with the final order data.
+		// Update the payment request with the final order data. If we can't update the payment request, abort the payment process.
 		Logger::debug('Updating PaymentRequest on NoFrixion.');
-		if ($paymentRequest = $this->updatePaymentRequest($paymentRequestId, $order, $createToken)) {
+		try {
+			$paymentRequest = $this->updatePaymentRequest($paymentRequestId, $order, $createToken);
+		} catch (\Throwable $e) {
+			Logger::debug('Error updating payment request: ' . $e->getMessage());
+			return ['result' => 'failure'];
+		}
+		if (!is_null($paymentRequest)) {
 			Logger::debug('Updating payment request successful.');
 			Logger::debug('PaymentRequest data: ');
 			Logger::debug($paymentRequest);
-		}
+			// Handle existing token selected for payment.
+			// We directly redirect the user from here on success, otherwise continue with the response below.
+			Logger::debug('Checking for existing token payment.');
+			$paymentTokenFieldName = "wc-{$currentGateway}-payment-token";
+			if (isset($_POST[$paymentTokenFieldName]) && 'new' !== $_POST[$paymentTokenFieldName]) {
+				Logger::debug('Handle existing token payment.');
+				$tokenId = wc_clean($_POST[$paymentTokenFieldName]);
+				Logger::debug('Found existing token with id: ' . $tokenId);
+				$token = \WC_Payment_Tokens::get($tokenId);
+				if ($token->get_user_id() !== get_current_user_id()) {
+					// todo: show notice, wc_add_notice()
+					Logger::debug('Loaded token user id does not match current user id. Token id: ' . $tokenId);
+					throw new \Exception(__('You are not allowed to use this saved card, aborting', 'nofrixion-for-woocommerce'));
+				}
 
-		// Handle existing token selected for payment.
-		// We directly redirect the user from here on success, otherwise continue with the response below.
-		Logger::debug('Checking for existing token payment.');
-		$paymentTokenFieldName = "wc-{$currentGateway}-payment-token";
-		if (isset($_POST[$paymentTokenFieldName]) && 'new' !== $_POST[$paymentTokenFieldName]) {
-			Logger::debug('Handle existing token payment.');
-			$tokenId = wc_clean($_POST[$paymentTokenFieldName]);
-			Logger::debug('Found existing token with id: ' . $tokenId);
-			$token = \WC_Payment_Tokens::get($tokenId);
-			if ($token->get_user_id() !== get_current_user_id()) {
-				// todo: show notice, wc_add_notice()
-				Logger::debug('Loaded token user id does not match current user id. Token id: ' . $tokenId);
-				throw new \Exception(__('You are not allowed to use this saved card, aborting', 'nofrixion-for-woocommerce'));
-			}
+				// Try to pay with the saved token.
+				$paywithTokenResult = $this->payWithToken($paymentRequestId, $token);
+				if ($paywithTokenResult) {
+					$order->update_meta_data('Nofrixion_tokenpayment_status', $paywithTokenResult['status']);
+					$order->update_meta_data('Nofrixion_tokenisedCard_id', $token->get_token());
+					$order->save();
 
-			// Try to pay with the saved token.
-			$paywithTokenResult = $this->payWithToken($paymentRequestId, $token);
-			if ($paywithTokenResult) {
-				$order->update_meta_data('Nofrixion_tokenpayment_status', $paywithTokenResult['status']);
-				$order->update_meta_data('Nofrixion_tokenpayment_authorizedAmount', $paywithTokenResult['authorizedAmount']);
-				$order->update_meta_data('Nofrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
-				$order->update_meta_data('Nofrixion_tokenpayment_transactionID', $paywithTokenResult['transactionID']);
-				$order->update_meta_data('Nofrixion_tokenisedCard_id', $token->get_token());
-				$order->save();
+					Logger::debug('Successfully paid with existing token: ' . print_r($paywithTokenResult, true));
 
-				Logger::debug('Successfully paid with existing token: ' . print_r($paywithTokenResult, true));
-
-				if ($paywithTokenResult['status'] === 'AUTHORIZED') {
-					$order->payment_complete();
-					$order->add_order_note('Payment with existing token successfully finished. TokenisedCardId: ' . $token->get_token() . ' TransactionID: ' . $paywithTokenResult['transactionID']);
-					Logger::debug('Successfully completed token payment. Redirecting directly to received-order page.');
-					$orderPaidWithToken = true;
+					if ($paywithTokenResult['status'] === 'AUTHORIZED') {
+						$order->payment_complete();
+						$order->add_order_note('Payment with existing token successfully finished. TokenisedCardId: ' . $token->get_token());
+						Logger::debug('Successfully completed token payment. Redirecting directly to received-order page.');
+						$orderPaidWithToken = true;
+					} else {
+						$failedMsg = 'Failed to pay with token, returned other status than AUTHORIZED, payment failed. TokenisedCardId: ' . $token->get_token();
+						Logger::debug($failedMsg);
+						// Todo: maybe keep order in pending state here.
+						$order->update_status('failed', $failedMsg);
+						throw new \Exception(__('Card was not authorized. Please try another one.', 'nofrixion-for-woocommerce'));
+					}
 				} else {
-					$failedMsg = 'Failed to pay with token, returned other status than AUTHORIZED, payment failed. TokenisedCardId: ' . $token->get_token();
-					Logger::debug($failedMsg);
-					// Todo: maybe keep order in pending state here.
-					$order->update_status('failed', $failedMsg);
-					throw new \Exception(__('Card was not authorized. Please try another one.', 'nofrixion-for-woocommerce'));
+					$order->add_order_note('Error processing payment with token, tokenisedCardId: ' . $token->get_token() . ' Check debug log for details.');
+					throw new \Exception(__('Error processing the payment with your saved card. Please try another one.', 'nofrixion-for-woocommerce'));
 				}
 			} else {
-				$order->add_order_note('Error processing payment with token, tokenisedCardId: ' . $token->get_token() . ' Check debug log for details.');
-				throw new \Exception(__('Error processing the payment with your saved card. Please try another one.', 'nofrixion-for-woocommerce'));
+				Logger::debug('No existing token payment selected, continuing.');
 			}
-		} else {
-			Logger::debug('No existing token payment selected, continuing.');
-		}
 
-		Logger::debug('All done, redirecting user.');
-		return [
-			'result'   => 'success',
-			'redirect' => $order->get_checkout_payment_url(false),
-			'orderId' => $order->get_id(),
-			'paymentRequestId' => $paymentRequestId,
-			'hasSubscription' => $hasSubscription,
-			'orderPaidWithToken' => $orderPaidWithToken,
-			'orderReceivedPage' => $order->get_checkout_order_received_url(),
-			'isPispPayment' => false,
-		];
+			Logger::debug('All done, redirecting user.');
+			// 'warning' notices generated up to here will be prepended to the json data in HTML format.
+			wc_clear_notices();
+			return [
+				'result'   => 'success',
+				'redirect' => $order->get_checkout_payment_url(false),
+				'orderId' => $order->get_id(),
+				'paymentRequestId' => $paymentRequestId,
+				'hasSubscription' => $hasSubscription,
+				'orderPaidWithToken' => $orderPaidWithToken,
+				'orderReceivedPage' => $order->get_checkout_order_received_url(),
+				'isPispPayment' => false,
+			];
+		} else {
+			Logger::debug('Error updating payment request#: ' . $paymentRequestId);
+			return ['result' => 'failure'];
+		}
 	}
 
 	public function checkWCOrderHasSubscription(\WC_order $order): bool
@@ -277,11 +307,11 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 		wp_enqueue_script('nofrixion_js', 'https://cdn.nofrixion.com/nofrixion.js');
 
 		// Register custom css.
-		wp_register_style('woocommerce-nofrixion-stylesheet', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css', array(), self::CSS_VERSION);
+		wp_register_style('woocommerce-nofrixion-stylesheet', NOFRIXION_PLUGIN_URL . 'assets/css/nofrixion.css', array(), NOFRIXION_CSS_VERSION);
 		wp_enqueue_style('woocommerce-nofrixion-stylesheet');
 
 		// Register custom JS.
-		wp_register_script('woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', ['jquery', 'nofrixion_js'], self::JS_VERSION, true);
+		wp_register_script('woocommerce_nofrixion', NOFRIXION_PLUGIN_URL . 'assets/js/nofrixion.js', ['jquery', 'nofrixion_js'], NOFRIXION_JS_VERSION, true);
 
 		// Pass object NoFrixionWP to be available on the frontend in nofrixion.js.
 		wp_localize_script('woocommerce_nofrixion', 'NoFrixionWP', [
@@ -290,6 +320,7 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			'apiNonce' => wp_create_nonce('nofrixion-nonce'),
 			'isRequiredField' => __('is a required field.', 'nofrixion-for-woocommerce'),
 			'is_change_payment_page' => isset($_GET['change_payment_method']) ? 'yes' : 'no',
+			'is_checkout_page' => is_checkout() ? 'yes' : 'no',
 			'is_pay_for_order_page' => is_wc_endpoint_url('order-pay') ? 'yes' : 'no',
 			'is_add_payment_method_page' => is_add_payment_method_page() ? 'yes' : 'no',
 			'pispNoProviderSelected' => __('Please select a bank to continue.', 'nofrixion-for-woocommerce'),
@@ -496,9 +527,9 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 		}
 	}
 
-	/**
+	/*
 	 * Create an payment request on NoFrixion Server. ** DOES THIS EVER RUN? **
-	 */
+	
 	public function createPaymentRequest(\WC_Order $order, bool $createToken = false): ?PaymentRequest
 	{
 		Logger::debug('Entering createPaymentRequest()');
@@ -531,7 +562,7 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 
 			$paymentRequest = $this->apiHelper->paymentRequestClient->createPaymentRequest($newPr);
 
-			$this->updateOrderMetadata($order->get_id(), (array) $paymentRequest);
+			$this->updateOrderMetadata($order, (array) $paymentRequest);
 
 			return $paymentRequest;
 		} catch (\Throwable $e) {
@@ -540,9 +571,10 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 
 		return null;
 	}
+ */
 
 	/**
-	 * Update payment request on NoFrixion Server.
+	 * Update payment request on NoFrixion Server with details from Order being processed.
 	 */
 	public function updatePaymentRequest(string $paymentRequestId, \WC_Order $order, bool $createToken = false): ?PaymentRequest
 	{
@@ -557,7 +589,7 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 		$currency = $order->get_currency();
 		$amount = PreciseNumber::parseString($order->get_total()); // unlike method signature suggests, it returns string.
 
-		// We need to set the customer id for card tokens on subscriptions.
+		// Set the customer id (hash billing email for anonymous users).
 		$userId = get_current_user_id();
 		if ($userId === 0) {
 			$userId = hash('sha256', $order->get_billing_email());
@@ -571,12 +603,17 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			$updatePr->paymentMethodTypes = implode(',', [str_replace('nofrixion_', '', $this->getId())]);
 			$updatePr->orderID = $orderNumber;
 			$updatePr->cardCreateToken = $createToken;
-			$updatePr->customerID = $createToken ? (string) $userId : null;
+			//$updatePr->customerID = $createToken ? (string) $userId : null;
+			$updatePr->customerID = (string) $userId;
 			$updatePr->customerEmailAddress = $order->get_billing_email();
 
 			$paymentRequest = $this->apiHelper->paymentRequestClient->updatePaymentRequest($paymentRequestId, $updatePr);
 
-			$this->updateOrderMetadata($order->get_id(), (array) $paymentRequest);
+			$this->updateOrderMetadata($order, (array) $paymentRequest);
+
+			// Payment request 'stub' has been updated to match a specific order.
+			// => Clear WC session variable so we don't use it again.
+			WC()->session->__unset(NOFRIXION_SESSION_PAYMENTREQUEST_ID);
 
 			return $paymentRequest;
 		} catch (\Throwable $e) {
@@ -606,10 +643,11 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 	/**
 	 * References WC order metadata with NoFrixion payment request data.
 	 */
-	protected function updateOrderMetadata(int $orderId, array $paymentRequest)
+	protected function updateOrderMetadata(\WC_Order $order, array $paymentRequest)
 	{
+		$orderId = $order->get_id();
 		update_post_meta($orderId, 'Nofrixion_id', $paymentRequest['id']);
-		update_post_meta($orderId, 'Nofrixion_isSubscription', $paymentRequest['cardCreateToken'] ? 1 : 0);
+		update_post_meta($orderId, 'Nofrixion_isSubscription', $this->checkWCOrderHasSubscription($order));
 		update_post_meta($orderId, 'Nofrixion_CustomerID', $paymentRequest['customerID'] ?? '');
 	}
 
@@ -672,17 +710,7 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			$newPr->orderID = $orderNumber;
 
 			$paymentRequest = $client->createPaymentRequest($newPr);
-			/*
-			$paymentRequest = $client->createPaymentRequest(
-				'',
-				$this->get_return_url($renewalOrder),
-				$order->get_billing_email(),
-				$amountFormatted,
-				$currency,
-				['cardtoken'],
-				$orderNumber
-			);
-			*/
+
 			$renewalOrder->update_meta_data('Nofrixion_isSubscription', 1);
 			$renewalOrder->update_meta_data('Nofrixion_tokenisedCard_id', $tokenisedCardId);
 
@@ -700,14 +728,12 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 			);
 
 			$renewalOrder->update_meta_data('Nofrixion_renewal_status', $paywithTokenResult['status']);
-			$renewalOrder->update_meta_data('Nofrixion_renewal_authorizedAmount', $paywithTokenResult['authorizedAmount']);
-			$renewalOrder->update_meta_data('Nofrixion_renewal_transactionID', $paywithTokenResult['transactionID']);
 
 			Logger::debug('Subs: Successfully created pay with token request: ' . print_r($paywithTokenResult, true));
 
 			if ($paywithTokenResult['status'] === 'AUTHORIZED') {
 				$renewalOrder->payment_complete();
-				$renewalOrder->add_order_note('Renewal of subscription successfully processed. TransactionID: ' . $paywithTokenResult['transactionID']);
+				$renewalOrder->add_order_note('Renewal of subscription successfully processed.');
 				Logger::debug('Subs: Successfully completed renewal payment. Exiting.');
 				return ['result' => 'success'];
 			} else {
@@ -742,11 +768,8 @@ abstract class NofrixionGateway extends \WC_Payment_Gateway
 		Logger::debug('$paymentRequestId: ' . $paymentRequestId . ' $tokenisedCardId: ' . $token->get_token() . ' TokenId: ' . $token->get_id());
 
 		try {
-			// PaymentRequest client.
-			$client = new PaymentRequestClient($this->apiHelper->url, $this->apiHelper->apiToken);
-
 			// Charge payment request with tokenised card.
-			$result = $client->payWithCardToken(
+			$result = $this->apiHelper->paymentRequestClient->payWithCardToken(
 				$paymentRequestId,
 				$token->get_token()
 			);

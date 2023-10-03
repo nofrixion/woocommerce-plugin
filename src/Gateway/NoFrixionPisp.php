@@ -76,7 +76,7 @@ class NofrixionPisp extends NofrixionGateway
 	public function payment_fields()
 	{
 
-		echo '<div class="pisp-payment-options">';
+		echo '<div class="nf-pisp-payment-options">';
 		foreach ($this->pispProviders as $provider) {
 			echo '<input class="nf-bank-button" type="image" src="' . $provider->logo . '" alt="' . $provider->bankName . '" name="wc-pisp-provider" value="' . $provider->personalInstitutionID . '">';
 		}
@@ -145,7 +145,6 @@ class NofrixionPisp extends NofrixionGateway
 		}
 
 		$order->add_meta_data('Nofrixion_pispProviderId', $pispProviderId);
-		//$order->add_meta_data('Nofrixion_successWebHookUrl', )
 		$order->save();
 
 		// Update the payment request with the final order data.

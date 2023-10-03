@@ -1,16 +1,18 @@
 <?php
 
-declare( strict_types=1 );
+declare(strict_types=1);
 
 namespace Nofrixion\WC\Gateway;
 
 use Nofrixion\WC\Helper\ApiHelper;
 
-class NofrixionCard extends NofrixionGateway {
+class NofrixionCard extends NofrixionGateway
+{
 
 	public ApiHelper $apiHelper;
 
-	public function __construct() {
+	public function __construct()
+	{
 		// General gateway setup.
 		$this->id = 'nofrixion_card';
 
@@ -44,7 +46,8 @@ class NofrixionCard extends NofrixionGateway {
 		];
 	}
 
-	public function payment_fields() {
+	public function payment_fields()
+	{
 
 
 		echo '
@@ -106,16 +109,17 @@ class NofrixionCard extends NofrixionGateway {
 		}
 	}
 
-	public function add_payment_method() {
-
+	public function add_payment_method()
+	{
 	}
 
-	public function getTitle(): string {
+	public function getTitle(): string
+	{
 		return $this->get_option('title', 'NoFrixion Card');
 	}
 
-	public function getDescription(): string {
+	public function getDescription(): string
+	{
 		return $this->get_option('description', '');
 	}
-
 }
