@@ -4,16 +4,19 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "NoFrixion\\WC\\": "src/"
+      "Nofrixion\\WC\\": "src/"
     }
   },
   "authors": [
+    {
+      "name": "NoFrixion Development Team"
+    },
     {
       "name": "Andreas Tasch",
       "email": "andy.tasch@gmail.com"
     }
   ],
   "require": {
-    "nofrixion/moneymoov-php": "^1.0"
+    "nofrixion/moneymoov-php": "^3.0.0"
   }
 }

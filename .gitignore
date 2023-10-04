@@ -9,5 +9,3 @@ node_modules/
 *.zip
 composer.lock
 /.vscode/
-/vendor/
-/testing/

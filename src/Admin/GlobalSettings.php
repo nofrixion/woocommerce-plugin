@@ -2,9 +2,9 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Admin;
+namespace Nofrixion\WC\Admin;
 
-use NoFrixion\WC\Helper\Logger;
+use Nofrixion\WC\Helper\Logger;
 
 class GlobalSettings extends \WC_Settings_Page {
 

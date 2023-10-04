@@ -12,3 +12,39 @@
 #nf-payframe {
 	position: relative;
 }
+
+.hidden {
+	display: none;
+}
+
+.nf-pisp-payment-options{
+  text-align: center;
+}
+
+.nf-bank-button {
+	background: white;
+	border-radius: 0.5rem;
+	border-width: 1px !important;
+	border-color: #cccccc;
+	margin: 0.25rem; 
+	/* margin: 0 auto; /* Center the items horizontally */
+	padding: 0.5rem;
+	transition-duration: 0.2s;
+	transition-timing-function: ease-in-out;
+	width: auto;
+}
+
+.nf-bank-button-selected {
+	background: #eeeeee;
+	outline: 2px solid black;
+}
+
+.nf-bank-button:focus {
+	background: #eeeeee;
+	border: 1px solid #cccccc;
+}
+
+.nf-bank-button:hover {
+	background: #eeeeee;
+	border: 1px solid #cccccc;
+}

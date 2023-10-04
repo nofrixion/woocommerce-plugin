@@ -1,0 +1,64 @@
+{
+    "packages": [
+        {
+            "name": "nofrixion/moneymoov-php",
+            "version": "dev-PLU19-make-merchantId-optional",
+            "version_normalized": "dev-PLU19-make-merchantId-optional",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nofrixion/moneymoov-php.git",
+                "reference": "379ae5667790268bb2cd9a8a8c09027241a2f874"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nofrixion/moneymoov-php/zipball/379ae5667790268bb2cd9a8a8c09027241a2f874",
+                "reference": "379ae5667790268bb2cd9a8a8c09027241a2f874",
+                "shasum": ""
+            },
+            "require": {
+                "ext-bcmath": "*",
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.14",
+                "vimeo/psalm": "^5.7"
+            },
+            "time": "2023-09-12T00:56:46+00:00",
+            "type": "library",
+            "installation-source": "source",
+            "autoload": {
+                "psr-4": {
+                    "Nofrixion\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "NoFrixion Development Team"
+                },
+                {
+                    "name": "Andreas Tasch",
+                    "email": "andy.tasch@gmail.com"
+                },
+                {
+                    "name": "Wouter Samaey",
+                    "email": "wouter.samaey@storefront.be"
+                }
+            ],
+            "description": "NoFrixion MoneyMoov PHP Library",
+            "support": {
+                "issues": "https://github.com/nofrixion/moneymoov-php/issues",
+                "source": "https://github.com/nofrixion/moneymoov-php/tree/PLU19-make-merchantId-optional"
+            },
+            "install-path": "../nofrixion/moneymoov-php"
+        }
+    ],
+    "dev": false,
+    "dev-package-names": []
+}
