@@ -17,6 +17,6 @@
     }
   ],
   "require": {
-    "nofrixion/moneymoov-php": "^3.0.0"
+    "nofrixion/moneymoov-php": "^3.0"
   }
 }
