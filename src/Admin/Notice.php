@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NoFrixion\WC\Admin;
+namespace Nofrixion\WC\Admin;
 
 class Notice {
 	/**

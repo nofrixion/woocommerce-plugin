@@ -2,14 +2,9 @@
 
 declare( strict_types=1 );
 
-namespace NoFrixion\WC\Admin;
+namespace Nofrixion\WC\Admin;
 
-use NoFrixion\Client\ApiKey;
-use NoFrixion\Client\StorePaymentMethod;
-use NoFrixion\WC\Helper\GreenfieldApiAuthorization;
-use NoFrixion\WC\Helper\ApiHelper;
-use NoFrixion\WC\Helper\GreenfieldApiWebhook;
-use NoFrixion\WC\Helper\Logger;
+use Nofrixion\WC\Helper\Logger;
 
 class GlobalSettings extends \WC_Settings_Page {
 
@@ -61,6 +56,13 @@ class GlobalSettings extends \WC_Settings_Page {
 				'desc'    => _x( 'Your NoFrixion merchant token. Get yours at our merchant portal on <a href="https://www.nofrixion.com" class="nofrixion-link" target="_blank">nofrixion.com</a>', 'global_settings', 'nofrixion-for-woocommerce' ),
 				'default' => '',
 				'id'      => 'nofrixion_token'
+			],
+			'mails'    => [
+				'title'   => esc_html_x( 'Admin notification emails', 'global_settings', 'nofrixion-for-woocommerce' ),
+				'type'    => 'text',
+				'desc'    => _x( 'Comma-separated list of email addresses that should get notifications in case of problems during payment processing', 'global_settings', 'nofrixion-for-woocommerce' ),
+				'default' => get_option('admin_email'),
+				'id'      => 'nofrixion_admin_mails'
 			],
 			'debug'      => [
 				'title'   => __( 'Debug Log', 'nofrixion-for-woocommerce' ),

@@ -9,19 +9,57 @@ class ComposerStaticInitb239ea4f9e826c6bcbffbb435c068265
     public static $prefixLengthsPsr4 = array (
         'N' => 
         array (
-            'NoFrixion\\WC\\' => 13,
+            'Nofrixion\\WC\\' => 13,
+            'Nofrixion\\' => 10,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'NoFrixion\\WC\\' => 
+        'Nofrixion\\WC\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
+        ),
+        'Nofrixion\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src',
         ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Nofrixion\\Client\\AbstractClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/AbstractClient.php',
+        'Nofrixion\\Client\\MerchantClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/MerchantClient.php',
+        'Nofrixion\\Client\\PaymentRequestClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/PaymentRequestClient.php',
+        'Nofrixion\\Client\\WebhookClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Client/WebhookClient.php',
+        'Nofrixion\\Exception\\BadRequestException' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Exception/BadRequestException.php',
+        'Nofrixion\\Exception\\ConnectException' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Exception/ConnectException.php',
+        'Nofrixion\\Exception\\ForbiddenException' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Exception/ForbiddenException.php',
+        'Nofrixion\\Exception\\NofrixionException' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Exception/NofrixionException.php',
+        'Nofrixion\\Exception\\RequestException' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Exception/RequestException.php',
+        'Nofrixion\\Http\\ClientInterface' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Http/ClientInterface.php',
+        'Nofrixion\\Http\\CurlClient' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Http/CurlClient.php',
+        'Nofrixion\\Http\\Response' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Http/Response.php',
+        'Nofrixion\\Http\\ResponseInterface' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Http/ResponseInterface.php',
+        'Nofrixion\\Model\\Merchant\\Merchant' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/Merchant/Merchant.php',
+        'Nofrixion\\Model\\Merchant\\MerchantPayByBankSetting' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/Merchant/MerchantPayByBankSetting.php',
+        'Nofrixion\\Model\\Merchant\\MerchantPayByBankSettings' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/Merchant/MerchantPayByBankSettings.php',
+        'Nofrixion\\Model\\PaymentRequests\\PaymentInitiationResponse' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentInitiationResponse.php',
+        'Nofrixion\\Model\\PaymentRequests\\PaymentRequest' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentRequest.php',
+        'Nofrixion\\Model\\PaymentRequests\\PaymentRequestAddress' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentRequestAddress.php',
+        'Nofrixion\\Model\\PaymentRequests\\PaymentRequestCreate' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentRequestCreate.php',
+        'Nofrixion\\Model\\PaymentRequests\\PaymentRequestResult' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentRequestResult.php',
+        'Nofrixion\\Model\\PaymentRequests\\PaymentRequestUpdate' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/PaymentRequests/PaymentRequestUpdate.php',
+        'Nofrixion\\Model\\Webhook' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Model/Webhook.php',
+        'Nofrixion\\Util\\PreciseNumber' => __DIR__ . '/..' . '/nofrixion/moneymoov-php/src/Util/PreciseNumber.php',
+        'Nofrixion\\WC\\Admin\\GlobalSettings' => __DIR__ . '/../..' . '/src/Admin/GlobalSettings.php',
+        'Nofrixion\\WC\\Admin\\Notice' => __DIR__ . '/../..' . '/src/Admin/Notice.php',
+        'Nofrixion\\WC\\Gateway\\NofrixionCard' => __DIR__ . '/../..' . '/src/Gateway/NofrixionCard.php',
+        'Nofrixion\\WC\\Gateway\\NofrixionGateway' => __DIR__ . '/../..' . '/src/Gateway/NofrixionGateway.php',
+        'Nofrixion\\WC\\Gateway\\NofrixionPisp' => __DIR__ . '/../..' . '/src/Gateway/NofrixionPisp.php',
+        'Nofrixion\\WC\\Helper\\ApiHelper' => __DIR__ . '/../..' . '/src/Helper/ApiHelper.php',
+        'Nofrixion\\WC\\Helper\\Logger' => __DIR__ . '/../..' . '/src/Helper/Logger.php',
+        'Nofrixion\\WC\\Helper\\OrderStates' => __DIR__ . '/../..' . '/src/Helper/OrderStates.php',
+        'Nofrixion\\WC\\Helper\\TokenManager' => __DIR__ . '/../..' . '/src/Helper/TokenManager.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
