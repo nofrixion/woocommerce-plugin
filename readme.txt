@@ -4,11 +4,7 @@ Tags: payment, payments, credit card, payment request, payment gateway, payment 
 Requires at least: 5.2
 Tested up to: 6.0
 Requires PHP: 7.4
-<<<<<<< HEAD
-Stable tag: 1.1.15
-=======
-Stable tag: 1.1.26
->>>>>>> 91e34a639751e5c7c294f59d6edd02b79f243e10
+Stable tag: 1.2.0
 License: MIT
 License URI: https://github.com/nofrixion/woocommerce-plugin/blob/master/license.txt
 
@@ -32,16 +28,14 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
-<<<<<<< HEAD
-= 1.1.16 :: 2022-10-2 =
-* Updated for MoneyMoov API changes.
-=======
+= 1.2.0 :: 2023-10-06 =
+* Add Pay by Bank and bug fixes,
 = 1.1.29 :: 2023-02-03 =
-Fix for duplicate card payment authorisations.
+* Fix for duplicate card payment authorisations.
 = 1.1.28 :: 2023-01-23 =
-Fix for disappearing card payment fields.
+* Fix for disappearing card payment fields.
 = 1.1.27 :: 2023-01-20 =
-Adjustment for new payelement headless fix.
+* Adjustment for new payelement headless fix.
 = 1.1.26 :: 2023-01-03 =
 * Bug fixes.
 = 1.1.25 :: 2022-12-20 =
@@ -54,7 +48,6 @@ Adjustment for new payelement headless fix.
 * Updates for MoneyMoov API changes.
 = 1.1.15 :: 2022-09-28 =
 * Set customer email address for card payment.
->>>>>>> 91e34a639751e5c7c294f59d6edd02b79f243e10
 = 1.1.14 :: 2022-05-26 =
 * Remove unneeded directories.
 = 1.0.7 :: 2022-05-25 =
