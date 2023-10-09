@@ -59,6 +59,6 @@
             "install-path": "../nofrixion/moneymoov-php"
         }
     ],
-    "dev": true,
+    "dev": false,
     "dev-package-names": []
 }
