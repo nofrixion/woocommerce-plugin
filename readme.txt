@@ -2,9 +2,9 @@
 Contributors: nofrixion
 Tags: payment, payments, credit card, payment request, payment gateway, payment processing, WooCommerce, NoFrixion
 Requires at least: 5.2
-Tested up to: 6.0
+Tested up to: 6.3
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: MIT
 License URI: https://github.com/nofrixion/woocommerce-plugin/blob/master/license.txt
 
