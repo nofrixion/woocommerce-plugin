@@ -220,8 +220,10 @@ class NofrixionWCPlugin
 	}
 
 	/**
-	 * Handles the AJAX callback from the Payment Request on the checkout page.
+	 * Handles the AJAX callback from the Payment Request on the checkout page. 
+	 * TODO - Don't think this runs any more, confirm and remove.
 	 */
+
 	public function processAjaxPaymentRequestUpdatePm()
 	{
 
