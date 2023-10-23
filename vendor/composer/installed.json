@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "nofrixion/moneymoov-php",
-            "version": "v3.0.0",
-            "version_normalized": "3.0.0.0",
+            "version": "v3.0.1",
+            "version_normalized": "3.0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nofrixion/moneymoov-php.git",
-                "reference": "25ee9f78bff515c6f1ef7933dbccf97068adece3"
+                "reference": "b7e7ee72fc8ee390343b9c862b5f7900fced5a03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nofrixion/moneymoov-php/zipball/25ee9f78bff515c6f1ef7933dbccf97068adece3",
-                "reference": "25ee9f78bff515c6f1ef7933dbccf97068adece3",
+                "url": "https://api.github.com/repos/nofrixion/moneymoov-php/zipball/b7e7ee72fc8ee390343b9c862b5f7900fced5a03",
+                "reference": "b7e7ee72fc8ee390343b9c862b5f7900fced5a03",
                 "shasum": ""
             },
             "require": {
@@ -26,7 +26,7 @@
                 "friendsofphp/php-cs-fixer": "^3.14",
                 "vimeo/psalm": "^5.7"
             },
-            "time": "2023-09-12T08:02:36+00:00",
+            "time": "2023-10-20T08:07:02+00:00",
             "type": "library",
             "installation-source": "source",
             "autoload": {
@@ -54,11 +54,11 @@
             "description": "NoFrixion MoneyMoov PHP Library",
             "support": {
                 "issues": "https://github.com/nofrixion/moneymoov-php/issues",
-                "source": "https://github.com/nofrixion/moneymoov-php/tree/v3.0.0"
+                "source": "https://github.com/nofrixion/moneymoov-php/tree/v3.0.1"
             },
             "install-path": "../nofrixion/moneymoov-php"
         }
     ],
-    "dev": false,
+    "dev": true,
     "dev-package-names": []
 }
