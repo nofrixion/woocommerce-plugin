@@ -31,8 +31,6 @@ class NofrixionPisp extends NofrixionGateway
 		// Admin facing title and description.
 		$this->method_title       = 'NoFrixion PISP';
 		$this->method_description = __('NoFrixion gateway supporting all available PISP banks.', 'nofrixion-for-woocommerce');
-
-		$this->pispProviders = $this->getPayByBankSettings();
 	}
 
 	// Handles MoneyMoov API success webhook that confirms payments received.
@@ -75,6 +73,9 @@ class NofrixionPisp extends NofrixionGateway
 
 	public function payment_fields()
 	{
+		if (empty($this->pispProviders)){
+			$this->pispProviders = $this->getPayByBankSettings();
+		}
 
 		echo '<div class="nf-pisp-payment-options">';
 		foreach ($this->pispProviders as $provider) {
@@ -137,6 +138,9 @@ class NofrixionPisp extends NofrixionGateway
 		Logger::debug('Selected pisp provider: ' . $pispProviderId);
 
 		// Check for allowed pisp providers, store provider id to order.
+		if (empty($this->pispProviders)){
+			$this->pispProviders = $this->getPayByBankSettings();
+		}
 		$allowedPispProviders = array_column($this->pispProviders, 'personalInstitutionID');
 		if (!in_array($pispProviderId, $allowedPispProviders)) {
 			$msg_no_provider = __('No valid pisp provider found, aborting.', 'nofrixion-for-woocommerce');
