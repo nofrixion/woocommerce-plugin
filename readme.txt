@@ -28,6 +28,8 @@ This plugin requires WooCommerce. Please make sure you have WooCommerce installe
 Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
+= 1.2.4 :: 2024-01-29 =
+* PHP autoloader fix.
 = 1.2.3 :: 2023-10-23 =
 * Performance bug fix.
 = 1.2.2 :: 2023-10-09 =
