@@ -4,7 +4,7 @@ Tags: payment, payments, credit card, payment request, payment gateway, payment 
 Requires at least: 5.2
 Tested up to: 6.3
 Requires PHP: 7.4
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: MIT
 License URI: https://github.com/nofrixion/woocommerce-plugin/blob/master/license.txt
 
@@ -29,7 +29,7 @@ Documentation and an API reference can be found at https://docs.nofrixion.com.
 
 == Changelog ==
 = 1.2.4 :: 2024-01-29 =
-* PHP autoloader fix.
+* Class autoloader fix.
 = 1.2.3 :: 2023-10-23 =
 * Performance bug fix.
 = 1.2.2 :: 2023-10-09 =
