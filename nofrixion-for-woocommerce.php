@@ -8,7 +8,7 @@
  * Author URI:      https://nofrixion.com
  * Text Domain:     nofrixion-for-woocommerce
  * Domain Path:     /languages
- * Version:         1.2.3
+ * Version:         1.2.4
  * Requires PHP:    7.4
  * Tested up to:    6.3 * Requires at least: 5.2
  */
@@ -23,10 +23,10 @@ use Nofrixion\WC\Helper\TokenManager;
 
 defined('ABSPATH') || exit();
 
-define('NOFRIXION_VERSION', '1.2.3');
+define('NOFRIXION_VERSION', '1.2.4');
 // bump these independently of NOFRIXION_VERSION for cachebusting during development
-define('NOFRIXION_JS_VERSION', '1.2.3');
-define('NOFRIXION_CSS_VERSION', '1.2.3');
+define('NOFRIXION_JS_VERSION', '1.2.4');
+define('NOFRIXION_CSS_VERSION', '1.2.4');
 
 define('NOFRIXION_PLUGIN_FILE_PATH', plugin_dir_path(__FILE__));
 define('NOFRIXION_PLUGIN_URL', plugin_dir_url(__FILE__));
