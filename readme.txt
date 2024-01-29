@@ -31,9 +31,9 @@ Documentation and an API reference can be found at https://docs.nofrixion.com.
 = 1.2.3 :: 2023-10-23 =
 * Performance bug fix.
 = 1.2.2 :: 2023-10-09 =
-* Dependancy fixes,
+* Dependancy fixes.
 = 1.2.0 :: 2023-10-06 =
-* Add Pay by Bank and bug fixes,
+* Add Pay by Bank and bug fixes.
 = 1.1.29 :: 2023-02-03 =
 * Fix for duplicate card payment authorisations.
 = 1.1.28 :: 2023-01-23 =

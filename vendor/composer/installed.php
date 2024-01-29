@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'nofrixion/nofrixion-for-woocommerce',
-        'pretty_version' => 'dev-develop',
-        'version' => 'dev-develop',
-        'reference' => 'fa3310cdfd2d696243b370a825116a489fdb0d8d',
+        'pretty_version' => 'dev-master',
+        'version' => 'dev-master',
+        'reference' => '819da97991edbc716a2cfafff853d6a3a7ff8d4c',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -20,9 +20,9 @@
             'dev_requirement' => false,
         ),
         'nofrixion/nofrixion-for-woocommerce' => array(
-            'pretty_version' => 'dev-develop',
-            'version' => 'dev-develop',
-            'reference' => 'fa3310cdfd2d696243b370a825116a489fdb0d8d',
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => '819da97991edbc716a2cfafff853d6a3a7ff8d4c',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
